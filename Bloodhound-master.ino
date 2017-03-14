@@ -158,24 +158,24 @@ void setup() {
 
 /**************************BEGIN GRID SEARCH************************************/  
   
-  while (row < 5 || col < 5)            //ends upon arrival at F2 (row 5, col 5)
+  while (y_pos < 5 || x_pos < 5)            //ends upon arrival at F2 (row 5, col 5)
 {
-  if (col % 2 == 1 && row < 5)        //odd column, go forward
+  if (x_pos % 2 == 1 && y_pos < 5)        //odd column, go forward
   {
-    Go_to( col , row + 1 );
+    Go_to( x_pos , y_pos + 1 );
 //    if (row < 
   }
-  else if (col % 2 == 1 && row == 5)   //top of odd column, go right
+  else if (x_pos % 2 == 1 && y_pos == 5)   //top of odd column, go right
   {
-    Go_to( col + 1 , row );
+    Go_to( x_pos + 1 , y_pos );
   }
-  else if (col %2 == 0 && row > 1)    //even column, go backward
+  else if (x_pos %2 == 0 && y_pos > 1)    //even column, go backward
   {
-    Go_to( col , row - 1 );
+    Go_to( x_pos , y_pos - 1 );
   }
-  else if (col %2 == 0 && row == 1)    //bottom of even column, go right
+  else if (x_pos %2 == 0 && y_pos == 1)    //bottom of even column, go right
   {
-    Go_to( col + 1 , row );
+    Go_to( x_pos + 1 , y_pos );
   }
 }
 /*******************************END GRID SEARCH***************************/
