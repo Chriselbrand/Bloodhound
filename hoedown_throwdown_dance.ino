@@ -153,13 +153,37 @@ void setup() {
     y_pos = 1;
   }
 
-  Go_to(1,2);
-  Knock();
-  Go_to(1,3);
-  Knock();
-  Go_to(1,4);
-  Knock();
-  Go_to(1,5);
+/**************************BEGIN GRID SEARCH************************************/  
+  
+  while (row < 5 || col < 5)            //ends upon arrival at F2 (row 5, col 5)
+{
+  if (col % 2 == 1 && row < 5)        //odd column, go forward
+  {
+    Go_to( col , row + 1 );
+//    if (row < 
+  }
+  else if (col % 2 == 1 && row == 5)   //top of odd column, go right
+  {
+    Go_to( col + 1 , row );
+  }
+  else if (col %2 == 0 && row > 1)    //even column, go backward
+  {
+    Go_to( col , row - 1 );
+  }
+  else if (col %2 == 0 && row == 1)    //bottom of even column, go right
+  {
+    Go_to( col + 1 , row );
+  }
+}
+/*******************************END GRID SEARCH***************************/
+
+//   Go_to(1,2);
+//   Knock();
+//   Go_to(1,3);
+//   Knock();
+//   Go_to(1,4);
+//   Knock();
+//   Go_to(1,5);
 
 
 
