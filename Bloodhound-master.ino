@@ -96,6 +96,9 @@ int obstaclex[10];
 int obstacley[10];
 int obnum;
 
+int row = 0;        //horizontal position
+int col = 0;        //vertical position
+
 /**************************************************************************START OF PROGRAM***************************************************************************************************/
 
 //Line dancing moves
