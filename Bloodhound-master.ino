@@ -165,8 +165,10 @@ void setup() {
     offset_Bravo(1);
     offset_Charlie(1);
     align_Bravo(1);
-    Knock();
     x_pos = 1;        y_pos = 1;
+    Knock();    
+    matrix.drawPixel(y_pos, x_pos, LED_RED);
+    matrix.writeDisplay();       delay(500);
   }
 
 /**************************BEGIN GRID SEARCH************************************/  
