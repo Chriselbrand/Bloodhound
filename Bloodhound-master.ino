@@ -176,25 +176,39 @@ void setup() {
   {
     Go_to( x_pos , y_pos + 1 );
     Knock();
+    matrix.drawPixel(y_pos, x_pos, LED_RED);
+    matrix.writeDisplay();
+    delay(500);
 //    if (row < 
   }
   else if (x_pos % 2 == 1 && y_pos == 5)   //top of odd column, go right
   {
     Go_to( x_pos + 1 , y_pos );
     Knock();
+    matrix.drawPixel(y_pos, x_pos, LED_GREEN);
+    matrix.writeDisplay();
+    delay(500);
   }
   else if (x_pos %2 == 0 && y_pos > 1)    //even column, go backward
   {
     Go_to( x_pos , y_pos - 1 );
     Knock();
+    matrix.drawPixel(y_pos, x_pos, LED_GREEN);
+    matrix.writeDisplay();
+    delay(500);
   }
   else if (x_pos %2 == 0 && y_pos == 1)    //bottom of even column, go right
   {
     Go_to( x_pos + 1 , y_pos );
     Knock();
+    matrix.drawPixel(y_pos, x_pos, LED_RED);
+    matrix.writeDisplay();
+    delay(500);
   }
 }
 /*******************************END GRID SEARCH***************************/
+  
+  //return function since last space was (5,5) we are finished
   
 }
   
