@@ -3,7 +3,7 @@
 ********************************************************KEMP HARTZOG, CHRIS HARRIS, THOMAS MILLER, CORY LANDETA********************************************************************************
 **********************************************************************************************************************************************************************************************/
 
-/***************************************************************************LIBRARIES*********************************************************************************************************/
+/***************************************************************************LIBRARIES & SETUP*********************************************************************************************************/
 
 #include <Wire.h>
 
@@ -11,53 +11,11 @@
 #include <Adafruit_GFX.h>
 #include "Adafruit_LEDBackpack.h"
 
-//Ultrasonics library
-#include <NewPing.h>
-
-//motor shield library
-#include <Adafruit_MotorShield.h>
-#include "utility/Adafruit_MS_PWMServoDriver.h"
-
-//servo library
-#include <Servo.h>
-
-/*****************************************************************************INITIALIZATION**************************************************************************************************/
-
-// Create the motor shield object with the default I2C address
-Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 
-
 //create matrix object
 Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
 
-// Select which 'port' M1, M2, M3 or M4.
-Adafruit_DCMotor *M1Motor = AFMS.getMotor(1); Adafruit_DCMotor *M2Motor = AFMS.getMotor(2);
-Adafruit_DCMotor *M3Motor = AFMS.getMotor(3); Adafruit_DCMotor *M4Motor = AFMS.getMotor(4);
-
-//declare the grabber as servo
-Servo grabber;
-
-//initialize grabber position to be used in code
-int grabber_start    = 75;
-int grabber_cache    = 0;
-int grabber_finished = 180;
-
-//Setup variables for moving one block and initial speed
-int oneBlock = 306;  int Ninety  = 24;
-int M1Speed  = 50 ;  int M2Speed = 50; 
-int M3Speed  = 50 ;  int M4Speed = 50;
-
-//interrupt pins and motor ticks count
-int M1tick = 0; int M2tick = 0; int M3tick= 0 ; int M4tick = 0;
-int M1interrupt = 19; int M2interrupt = 18;
-int M3interrupt =  3; int M4interrupt =  2;
-
-//pin for knocker & tic tracer
-int knocker = 7;
-int tic = 12;
-
-//initialize x,y cordinates
-int x_pos = 0;  //int x_finish = 0;
-int y_pos = 0;  //int y_finish = 0;
+//Ultrasonics library
+#include <NewPing.h>
 
 //Ultrasonic initialization
 #define MAX_DISTANCE   122  // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
@@ -71,36 +29,82 @@ NewPing BravoR(BravoR_TRIGGER, BravoR_ECHO, MAX_DISTANCE);
 NewPing BravoL(BravoL_TRIGGER, BravoL_ECHO, MAX_DISTANCE); 
 
 //Alpha side trigger and echo
-#define AlphaR_TRIGGER    28  
-#define AlphaR_ECHO       29 
+#define AlphaR_TRIGGER     28  
+#define AlphaR_ECHO        29 
 NewPing AlphaR(AlphaR_TRIGGER, AlphaR_ECHO, MAX_DISTANCE);  
-#define AlphaL_TRIGGER    30  
-#define AlphaL_ECHO       31 
+#define AlphaL_TRIGGER     30  
+#define AlphaL_ECHO        31 
 NewPing AlphaL(AlphaL_TRIGGER, AlphaL_ECHO, MAX_DISTANCE);
 
 //Delta side trigger and echo
-#define DeltaR_TRIGGER    32  
-#define DeltaR_ECHO       33 
+#define DeltaR_TRIGGER     32  
+#define DeltaR_ECHO        33 
 NewPing DeltaR(DeltaR_TRIGGER, DeltaR_ECHO, MAX_DISTANCE);  
-#define DeltaL_TRIGGER    34  
-#define DeltaL_ECHO       35  
+#define DeltaL_TRIGGER     34  
+#define DeltaL_ECHO        35  
 NewPing DeltaL(DeltaL_TRIGGER, DeltaL_ECHO, MAX_DISTANCE);
 
 //Charlie side triggera and echo
-#define CharlieR_TRIGGER  36  
-#define CharlieR_ECHO     37  
+#define CharlieR_TRIGGER   36  
+#define CharlieR_ECHO      37  
 NewPing CharlieR(CharlieR_TRIGGER, CharlieR_ECHO, MAX_DISTANCE);  
-#define CharlieL_TRIGGER  22  
-#define CharlieL_ECHO     23
+#define CharlieL_TRIGGER   22  
+#define CharlieL_ECHO      23
 NewPing CharlieL(CharlieL_TRIGGER, CharlieL_ECHO, MAX_DISTANCE);  
 
+//motor shield library
+#include <Adafruit_MotorShield.h>
+#include "utility/Adafruit_MS_PWMServoDriver.h"
+
+// Create the motor shield object with the default I2C address
+Adafruit_MotorShield AFMS = Adafruit_MotorShield(); 
+
+// Select which 'port' M1, M2, M3 or M4.
+Adafruit_DCMotor *M1Motor = AFMS.getMotor(1); Adafruit_DCMotor *M2Motor = AFMS.getMotor(2);
+Adafruit_DCMotor *M3Motor = AFMS.getMotor(3); Adafruit_DCMotor *M4Motor = AFMS.getMotor(4);
+
+//Setup variables for moving one block and initial speed
+int oneBlock = 306;  int Ninety  = 24;
+int M1Speed  = 50 ;  int M2Speed = 50; 
+int M3Speed  = 50 ;  int M4Speed = 50;
+
+//interrupt pins and motor ticks count
+int M1tick = 0; int M2tick = 0; int M3tick= 0 ; int M4tick = 0;
+#define M1interrupt 19 
+#define M2interrupt 18
+#define M3interrupt  3 
+#define M4interrupt  2
+
+//servo library
+#include <Servo.h>
+
+//declare the grabber as servo
+Servo grabber;
+
+//initialize grabber position to be used in code
+//#define grabber_pin 40
+int grabber_start    = 75;
+int grabber_cache    = 0;
+int grabber_finished = 180;
+
+//Knocker pin
+#define knocker 7
+
+//tic tracer pin
+#define tic 12
+
+/*****************************************************************************INITIALIZATION**************************************************************************************************/
+
+//initialize x,y cordinates
+int x_pos = 0;        int y_pos = 0;  
+
 //arrays to use for obstacles
-int obstaclex[10];  int obstacley[10];
+int obstaclex[10];    int obstacley[10];
 int obnum;// number of obstacles avoided
 
 //arrays to use for determining under obstacle
-int OT_x[10]; int OT_y[10];
-int DE_x[10]; int DE_y[10];
+int OT_x[10];         int OT_y[10];
+int DE_x[10];         int DE_y[10];
 
 /**************************************************************************START OF PROGRAM***************************************************************************************************/
 
@@ -112,8 +116,7 @@ void setup() {
   matrix.begin(0x71); // matrix at 71 address
   matrix.clear();
   matrix.drawPixel(0, 0, LED_YELLOW);
-  matrix.writeDisplay();
-  delay(500);
+  matrix.writeDisplay();  delay(500);
 
   //start tic tracer
   pinMode(tic, OUTPUT);
@@ -121,8 +124,11 @@ void setup() {
   delay(500);
   digitalWrite(tic, LOW);
   
+  //knocker setup
+  pinMode(knocker, OUTPUT);
+  
   //initalize grabber pin and set to start position
-  grabber.attach(10);
+  //grabber.attach(grabber_pin);
   grabber.write(grabber_start);
   
   //Set speed that will be used
@@ -134,13 +140,10 @@ void setup() {
   pinMode(M3interrupt, INPUT_PULLUP); pinMode(M4interrupt, INPUT_PULLUP);
 
   //interrupt function attachment and call modes
-  attachInterrupt(digitalPinToInterrupt(19),M1count,RISING);
-  attachInterrupt(digitalPinToInterrupt(18),M2count,RISING);
-  attachInterrupt(digitalPinToInterrupt(3),M3count,RISING);
-  attachInterrupt(digitalPinToInterrupt(2),M4count,RISING);
-
-  //knocker setup
-  pinMode(knocker, OUTPUT);
+  attachInterrupt(digitalPinToInterrupt(M1interrupt),M1count,RISING);
+  attachInterrupt(digitalPinToInterrupt(M2interrupt),M2count,RISING);
+  attachInterrupt(digitalPinToInterrupt(M3interrupt),M3count,RISING);
+  attachInterrupt(digitalPinToInterrupt(M4interrupt),M4count,RISING);
 
   //port setup for printing
   Serial.begin(57600);
@@ -152,8 +155,7 @@ void setup() {
   if(AlphaL_time > 0 && AlphaL_time < 800){
     Right(oneBlock/2);
     align_Bravo(1);
-    x_pos = 1;
-    y_pos = 0;
+    x_pos = 1;        y_pos = 0;
   }
   //no block
   else{
@@ -164,8 +166,7 @@ void setup() {
     offset_Charlie(1);
     align_Bravo(1);
     Knock();
-    x_pos = 1;
-    y_pos = 1;
+    x_pos = 1;        y_pos = 1;
   }
 
 /**************************BEGIN GRID SEARCH************************************/  
@@ -177,8 +178,7 @@ void setup() {
     Go_to( x_pos , y_pos + 1 );
     Knock();
     matrix.drawPixel(y_pos, x_pos, LED_RED);
-    matrix.writeDisplay();
-    delay(500);
+    matrix.writeDisplay();       delay(500);
 //    if (row < 
   }
   else if (x_pos % 2 == 1 && y_pos == 5)   //top of odd column, go right
@@ -186,24 +186,21 @@ void setup() {
     Go_to( x_pos + 1 , y_pos );
     Knock();
     matrix.drawPixel(y_pos, x_pos, LED_GREEN);
-    matrix.writeDisplay();
-    delay(500);
+    matrix.writeDisplay();         delay(500);
   }
   else if (x_pos %2 == 0 && y_pos > 1)    //even column, go backward
   {
     Go_to( x_pos , y_pos - 1 );
     Knock();
     matrix.drawPixel(y_pos, x_pos, LED_GREEN);
-    matrix.writeDisplay();
-    delay(500);
+    matrix.writeDisplay();         delay(500);
   }
   else if (x_pos %2 == 0 && y_pos == 1)    //bottom of even column, go right
   {
     Go_to( x_pos + 1 , y_pos );
     Knock();
     matrix.drawPixel(y_pos, x_pos, LED_RED);
-    matrix.writeDisplay();
-    delay(500);
+    matrix.writeDisplay();       delay(500);
   }
 }
 /*******************************END GRID SEARCH***************************/
@@ -257,7 +254,7 @@ align_Alpha(1);
 
 //Move Right 12" so many Blocks times
 void Right(int Blocks){
-  Blocks = Blocks;
+  //Blocks = Blocks;
   int i = 0;
   M2tick = 0; M4tick = 0; //encoder counts
   M2Motor->run(FORWARD);  M4Motor->run(BACKWARD); //start motors moving
@@ -270,8 +267,7 @@ void Right(int Blocks){
         delayMicroseconds(100);
       }
     }
-    Serial.print(M2tick);
-    Serial.print(M4tick);
+    Serial.print(M2tick);     Serial.print(M4tick);
   }
   M2Motor->run(RELEASE);  M4Motor->run(RELEASE);  // turn off motors
   x_pos++;
@@ -280,7 +276,7 @@ void Right(int Blocks){
 
 //Move Left 12" so many Blocks times
 void Left(int Blocks){
-  Blocks = Blocks;
+  //Blocks = Blocks;
   int i = 0;
   M2tick = 0; M4tick = 0; //encoder counts
   M2Motor->run(BACKWARD); M4Motor->run(FORWARD);  //start motors moving
@@ -293,8 +289,7 @@ void Left(int Blocks){
         delayMicroseconds(100);
       }
     }
-    Serial.print(M2tick);
-    Serial.print(M4tick);
+    Serial.print(M2tick);   Serial.print(M4tick);
   }
   M2Motor->run(RELEASE);  M4Motor->run(RELEASE);  //turn off motors
   x_pos--;
@@ -303,7 +298,7 @@ void Left(int Blocks){
 
 //Move Backward 12" so many Blocks times
 void Backward(int Blocks){
-  Blocks = Blocks;
+  //Blocks = Blocks;
   int i = 0;
   M1tick = 0; M3tick = 0; //encoder counts
   M1Motor->run(BACKWARD); M3Motor->run(FORWARD);  //start motors moving
@@ -316,8 +311,7 @@ void Backward(int Blocks){
         delayMicroseconds(100);
       }
     }
-    Serial.print(M1tick);
-    Serial.print(M3tick);
+    Serial.print(M1tick);   Serial.print(M3tick);
   }
   M1Motor->run(RELEASE);  M3Motor->run(RELEASE);  //turn off motors
   y_pos--;
@@ -365,7 +359,7 @@ void Forward(int Blocks){
       
     }
   }
-  Blocks = Blocks;
+  //Blocks = Blocks;
   int i = 0;
   M1tick = 0; M3tick = 0; //encoder counts
   M1Motor->run(FORWARD);  M3Motor->run(BACKWARD); //start motors moving
@@ -378,8 +372,7 @@ void Forward(int Blocks){
         delayMicroseconds(100);
       }
     }
-    Serial.print(M1tick);
-    Serial.print(M3tick);
+    Serial.print(M1tick); Serial.print(M3tick);
   }
   M1Motor->run(RELEASE);  M3Motor->run(RELEASE);  //turn off motors
   y_pos++;
@@ -388,7 +381,7 @@ void Forward(int Blocks){
 
 //Rotate 90 degrees clockwise so many times
 void turnCW(int Blocks){
-  Blocks = Blocks;
+  //Blocks = Blocks;
   int i = 0;
   M1tick = 0; M2tick = 0; M3tick = 0; M4tick = 0; //encoder counts
   //start motors moving
@@ -412,7 +405,7 @@ void turnCW(int Blocks){
 
 //Rotate 90 degrees counter-clockwise so many times
 void turnCCW(int Blocks){
-  Blocks = Blocks;
+  //Blocks = Blocks;
   int i = 0;
   M1tick = 0; M2tick = 0; M3tick = 0; M4tick = 0; //encoder counts
   //start motors moving
@@ -687,7 +680,6 @@ void align_Delta(int multiple){
 //function that will go to an x,y position based on your current x,y position
 void Go_to(int x_finish, int y_finish){
   Serial.println("inloop");
-  //int y_finish = 0;
   int x_difference = x_finish - x_pos;
   int y_difference = y_finish - y_pos;
   while(x_difference != 0){
