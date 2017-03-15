@@ -65,8 +65,8 @@ Adafruit_DCMotor *M3Motor = AFMS.getMotor(3); Adafruit_DCMotor *M4Motor = AFMS.g
 
 //Setup variables for moving one block and initial speed
 int oneBlock = 306;  int Ninety  = 24;
-int M1Speed  = 50 ;  int M2Speed = 50; 
-int M3Speed  = 50 ;  int M4Speed = 50;
+int M1Speed  =  50;  int M2Speed = 50; 
+int M3Speed  =  50;  int M4Speed = 50;
 
 //interrupt pins and motor ticks count
 int M1tick = 0; int M2tick = 0; int M3tick= 0 ; int M4tick = 0;
@@ -83,8 +83,8 @@ Servo grabber;
 
 //initialize grabber position to be used in code
 //#define grabber_pin 40
-int grabber_start    = 75;
-int grabber_cache    = 0;
+int grabber_start    =  75;
+int grabber_cache    =   0;
 int grabber_finished = 180;
 
 //Knocker pin
@@ -807,14 +807,10 @@ void knowledge(){
  
 /**************************************************************************************INTERRUPT FUNCTIONS************************************************************************************/
  //functions that will count the rising edge of interrupts for each motor
-void M1count(){
-  M1tick++;}
-void M2count(){
-  M2tick++;}
-void M3count(){
-  M3tick++;}
-void M4count(){
-  M4tick++;}
+void M1count(){M1tick++;}
+void M2count(){M2tick++;}
+void M3count(){M3tick++;}
+void M4count(){M4tick++;}
 
 /****************************************************************************************CONTINUOUS LOOP**************************************************************************************/
 
