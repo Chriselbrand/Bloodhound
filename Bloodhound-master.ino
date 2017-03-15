@@ -734,7 +734,7 @@ void Go_to(int x_finish, int y_finish){
       }
     }
     if(y_difference<0){
-      if(y_pos<3){
+      if(y_pos<4){
         align_Charlie(y_pos);
         Backward(oneBlock);
         offset_Charlie(y_pos);
