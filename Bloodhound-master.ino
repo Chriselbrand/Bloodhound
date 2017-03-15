@@ -33,8 +33,10 @@ Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
 Adafruit_DCMotor *M1Motor = AFMS.getMotor(1); Adafruit_DCMotor *M2Motor = AFMS.getMotor(2);
 Adafruit_DCMotor *M3Motor = AFMS.getMotor(3); Adafruit_DCMotor *M4Motor = AFMS.getMotor(4);
 
+//declare the grabber as servo
 Servo grabber;
 
+//initialize grabber position to be used in code
 int grabber_start    = 75;
 int grabber_cache    = 0;
 int grabber_finished = 180;
@@ -92,12 +94,13 @@ NewPing CharlieR(CharlieR_TRIGGER, CharlieR_ECHO, MAX_DISTANCE);
 #define CharlieL_ECHO     23
 NewPing CharlieL(CharlieL_TRIGGER, CharlieL_ECHO, MAX_DISTANCE);  
 
-int obstaclex[10];
-int obstacley[10];
-int obnum;
+//arrays to use for obstacles
+int obstaclex[10];  int obstacley[10];
+int obnum;// number of obstacles avoided
 
-int row = 0;        //horizontal position
-int col = 0;        //vertical position
+//arrays to use for determining under obstacle
+int OT_x[10]; int OT_y[10];
+int DE_x[10]; int DE_y[10];
 
 /**************************************************************************START OF PROGRAM***************************************************************************************************/
 
@@ -117,7 +120,8 @@ void setup() {
   digitalWrite(tic, HIGH);
   delay(500);
   digitalWrite(tic, LOW);
-
+  
+  //initalize grabber pin and set to start position
   grabber.attach(10);
   grabber.write(grabber_start);
   
@@ -141,16 +145,24 @@ void setup() {
   //port setup for printing
   Serial.begin(57600);
   
+  //start program that will determine if obstacle in (1,1) position
   Right(oneBlock/2);
   unsigned int AlphaL_time = AlphaL.ping_median(5); // Send ping, get ping time in microseconds (uS).
+  //if block found
   if(AlphaL_time > 0 && AlphaL_time < 800){
     Right(oneBlock/2);
+    align_Bravo(1);
     x_pos = 1;
     y_pos = 0;
   }
+  //no block
   else{
+    align_Bravo(1);
     Forward(oneBlock);
     Right(oneBlock/2);
+    offset_Bravo(1);
+    offset_Charlie(1);
+    align_Bravo(1);
     Knock();
     x_pos = 1;
     y_pos = 1;
@@ -163,275 +175,43 @@ void setup() {
   if (x_pos % 2 == 1 && y_pos < 5)        //odd column, go forward
   {
     Go_to( x_pos , y_pos + 1 );
+    Knock();
+    matrix.drawPixel(y_pos, x_pos, LED_RED);
+    matrix.writeDisplay();
+    delay(500);
 //    if (row < 
   }
   else if (x_pos % 2 == 1 && y_pos == 5)   //top of odd column, go right
   {
     Go_to( x_pos + 1 , y_pos );
+    Knock();
+    matrix.drawPixel(y_pos, x_pos, LED_GREEN);
+    matrix.writeDisplay();
+    delay(500);
   }
   else if (x_pos %2 == 0 && y_pos > 1)    //even column, go backward
   {
     Go_to( x_pos , y_pos - 1 );
+    Knock();
+    matrix.drawPixel(y_pos, x_pos, LED_GREEN);
+    matrix.writeDisplay();
+    delay(500);
   }
   else if (x_pos %2 == 0 && y_pos == 1)    //bottom of even column, go right
   {
     Go_to( x_pos + 1 , y_pos );
+    Knock();
+    matrix.drawPixel(y_pos, x_pos, LED_RED);
+    matrix.writeDisplay();
+    delay(500);
   }
 }
 /*******************************END GRID SEARCH***************************/
-
-//   Go_to(1,2);
-//   Knock();
-//   Go_to(1,3);
-//   Knock();
-//   Go_to(1,4);
-//   Knock();
-//   Go_to(1,5);
-
-
-
-
-//  Go_to(1,1);
-//  Knock();
-//  Go_to(1,2);
-//  Knock();
-//Right(oneBlock);
-/*
-  //block(0,0)
-  Start(oneBlock);
-
-  //block(1,1)
-  align_Bravo(1);
-  offset_Bravo(1);
-  offset_Charlie(1);
-  align_Charlie(1);
-  Knock();
   
-  if(hollow){
-    if(wire){
-      matrix.drawPixel(x, y, LED_RED);
-      matrix.writeDisplay();
-      delay(500);
-    }
-    else(){
-      matrix.drawPixel(x, y, LED_GREEN);
-      matrix.writeDisplay();
-      delay(500);
-    }
-  }
-  
-  Forward(oneBlock);
-  align_Bravo(1);
-  Knock();
-  matrix.drawPixel(y, x, LED_GREEN);
-  matrix.writeDisplay();
-  delay(500);
-  Forward(oneBlock);
-
-  //block(1,3)
-  align_Bravo(1);
-  offset_Alpha(3);
-  offset_Bravo(1);
-  align_Bravo(1);
-  Knock();
-  Forward(oneBlock);
-  align_Bravo(1);
-  Knock();
-  matrix.drawPixel(y, x, LED_RED);
-  matrix.writeDisplay();
-  delay(500);
-  Forward(oneBlock);
-
-  //block(1,5)
-  align_Bravo(1);
-  offset_Bravo(1);
-  offset_Alpha(1);
-  align_Alpha(1);
-  Knock();
-  Right(oneBlock);
-  align_Alpha(1);
-  offset_Bravo(2);
-
-  //block(2,5)
-  align_Alpha(1);
-  offset_Bravo(2);
-  offset_Alpha(1);
-  align_Alpha(1);
-  Knock();
-  Backward(oneBlock);
-  align_Bravo(2);
-  Knock();
-  matrix.drawPixel(y, x, LED_RED);
-  matrix.writeDisplay();
-  delay(500);
-  Backward(oneBlock);
-  
-  //block(2,3)
-  align_Bravo(2);
-  offset_Alpha(3);
-  offset_Bravo(2);
-  align_Bravo(2);
-  Knock();
-  Backward(oneBlock);
-  align_Bravo(2);
-  Knock();
-  matrix.drawPixel(y, x, LED_RED);
-  matrix.writeDisplay();
-  delay(500);
-  Backward(oneBlock);
-
-  //block(2,1)
-  align_Charlie(1);
-  offset_Bravo(2);
-  offset_Charlie(1);
-  align_Charlie(1);
-  Knock();
-  matrix.drawPixel(y, x, LED_RED);
-  matrix.writeDisplay();
-  delay(500);
-  Right(oneBlock);
-  align_Charlie(1);
-  offset_Bravo(3);
-
-
-  //block(3,1)
-  align_Charlie(1);
-  offset_Bravo(3);
-  offset_Charlie(1);
-  align_Charlie(1);
-  Knock();
-  Forward(oneBlock);
-  
-  //block(3,2)
-  align_Charlie(2);
-  offset_Delta(3);
-  offset_Charlie(2);
-  align_Charlie(2);
-  Knock();
-  matrix.drawPixel(y, x, LED_RED);
-  matrix.writeDisplay();
-  delay(500);
-  Forward(oneBlock);
-  align_Bravo(3);
-  Knock();
-  Forward(oneBlock);
-
-  //Block(3,4)
-  align_Alpha(2);
-  offset_Bravo(3);
-  offset_Alpha(2);
-  align_Alpha(2);
-  Knock();
-  matrix.drawPixel(y, x, LED_RED);
-  matrix.writeDisplay();
-  delay(500);
-  Forward(oneBlock);
-
-  //block(3,5)
-  align_Alpha(1);
-  offset_Delta(3);
-  offset_Alpha(1);
-  align_Alpha(1);
-  Knock();
-  Right(oneBlock);
-  align_Alpha(1);
-  offset_Delta(2);
-
-  //block(4,5)
-  align_Alpha(1);
-  offset_Delta(2);
-  offset_Alpha(1);
-  align_Alpha(1);
-  Knock();
-  Backward(oneBlock);
-  align_Delta(2);
-  Knock();
-  matrix.drawPixel(y, x, LED_RED);
-  matrix.writeDisplay();
-  delay(500);
-  Backward(oneBlock);
-
-  //block(4,3)
-  align_Delta(2);
-  offset_Alpha(3);
-  offset_Delta(2);
-  align_Delta(2);
-  Knock();
-  matrix.drawPixel(y, x, LED_RED);
-  matrix.writeDisplay();
-  delay(500);
-  Backward(oneBlock);
-  align_Delta(2);
-  Knock();
-  matrix.drawPixel(y, x, LED_RED);
-  matrix.writeDisplay();
-  delay(500);
-  Backward(oneBlock);
-
-  //block(4,1)
-  align_Charlie(1);
-  offset_Delta(2);
-  offset_Charlie(1);
-  align_Charlie(1);
-  Knock();
-  Right(oneBlock);
-  align_Charlie(1);
-  offset_Delta(1);
-
-  //block(5,1)
-  align_Delta(1);
-  offset_Delta(1);
-  offset_Charlie(1);
-  align_Charlie(1);
-  Knock();
-  Forward(oneBlock);
-  align_Delta(1);
-  Knock();
-  Forward(oneBlock);
-
-  //block(5,3)
-  align_Delta(1);
-  offset_Alpha(3);
-  offset_Delta(1);
-  align_Delta(1);
-  Knock();
-  Forward(oneBlock);
-  align_Delta(1);
-  Knock();
-  Forward(oneBlock);
-
-  //block(5,5)
-  align_Delta(1);
-  offset_Delta(1);
-  offset_Alpha(1);
-  align_Alpha(1);
-  Knock();
-  End(oneBlock);
-
-  //block(4,4)
-  align_Delta(2);
-  offset_Delta(2);
-  offset_Alpha(2);
-  align_Alpha(2);
-  End(oneBlock*2.2);
-
-  //block(2,2)
-  align_Bravo(2);
-  offset_Bravo(2);
-  offset_Charlie(2);
-  align_Charlie(2);
-  End(oneBlock*2.2);
-
-  //block(0,0)
-  align_Bravo(1);
-
-  */
-
-  
-  
+  //return function since last space was (5,5) we are finished
   
 }
-
+  
 /**********************************************************************START OF FUNCTIONS(DANCE MOVES)****************************************************************************************/
 
 //knock funtion that knocks and returns
@@ -439,7 +219,7 @@ void Knock(){
   digitalWrite(knocker,HIGH);   delay(200);//open mosfet to drive solenoid
   digitalWrite(knocker,LOW);    delay(200);//close mosfet to return solenoid
 }
-
+// function for placement of camera to cache lid
 void Camera(){
   align_Alpha(1);
   M1Motor->setSpeed(M1Speed); M3Motor->setSpeed(M3Speed);
@@ -474,29 +254,6 @@ align_Alpha(1);
   
 }
 
-/*
-void Camera(){
-  M1Motor->setSpeed(M1Speed); M2Motor->setSpeed(M2Speed); 
-  M3Motor->setSpeed(M3Speed); M4Motor->setSpeed(M4Speed);
-  while(finish_pin == LOW){
-    if(forward_pin == HIGH){
-      M1Motor->run(FORWARD);  M3Motor->run(BACKWARD);
-    }
-    if(backward_pin == HIGH){
-      M1Motor->run(BACKWARD); M3Motor->run(FORWARD);
-    }
-    if(right_pin == HIGH){
-      M2Motor->run(FORWARD);  M4Motor->run(BACKWARD);
-    }
-    if(left_pin == HIGH){
-      M2Motor->run(BACKWARD); M4Motor->run(FORWARD);
-    }
-  }
-  M1Motor->run(RELEASE); M2Motor->run(RELEASE);
-  M3Motor->run(RELEASE); M4Motor->run(RELEASE);
-}
-
-*/
 
 //Move Right 12" so many Blocks times
 void Right(int Blocks){
@@ -629,59 +386,6 @@ void Forward(int Blocks){
   delay(200);
 }
 
-//Slide Movement for leaving home space
-void Start(int Blocks){
-  Blocks = Blocks;
-  int i = 0;
-  M1tick = 0; M2tick = 0; M3tick = 0; M4tick = 0; //encoder counts
-  //start motors moving
-  M1Motor->run(FORWARD); M3Motor->run(BACKWARD);
-  M2Motor->run(FORWARD); M4Motor->run(BACKWARD);
-  //loop for distance based on amount of encoder ticks
-  while(M1tick<Blocks && M2tick<Blocks && M3tick<Blocks && M4tick<Blocks){
-    if(i == 0){
-      //adjust speed for acceleration
-      for(i=50; i<200; i++){
-        M1Motor->setSpeed(i); M3Motor->setSpeed(i);
-        M2Motor->setSpeed(i); M4Motor->setSpeed(i);
-        delayMicroseconds(100);
-      }
-    }
-    Serial.print(M1tick);
-  }
-  M1Motor->run(RELEASE); M2Motor->run(RELEASE);
-  M3Motor->run(RELEASE); M4Motor->run(RELEASE);
-  //x++;
- // y++;
-  delay(200);
-}
-
-void End(int Blocks){
-  Blocks = Blocks;
-  int i = 0;
-  M1tick = 0; M2tick = 0; M3tick = 0; M4tick = 0; //encoder counts
-  //start motors moving
-  M1Motor->run(BACKWARD); M3Motor->run(FORWARD);
-  M2Motor->run(BACKWARD); M4Motor->run(FORWARD);
-  //loop for distance based on amount of encoder ticks
-  while(M1tick<Blocks && M2tick<Blocks && M3tick<Blocks && M4tick<Blocks){
-    if(i == 0){
-      //adjust speed for acceleration
-      for(i=50; i<200; i++){
-        M1Motor->setSpeed(i); M3Motor->setSpeed(i);
-        M2Motor->setSpeed(i); M4Motor->setSpeed(i);
-        delayMicroseconds(100);
-      }
-    }
-    Serial.print(M1tick);
-  }
-  M1Motor->run(RELEASE); M2Motor->run(RELEASE);
-  M3Motor->run(RELEASE); M4Motor->run(RELEASE);
-  delay(200);
-}
-
-
-
 //Rotate 90 degrees clockwise so many times
 void turnCW(int Blocks){
   Blocks = Blocks;
@@ -733,24 +437,18 @@ void turnCCW(int Blocks){
 //adjust offset from wall based on ultrasonic readings
 void offset_Alpha(int multiple){
   M1Motor->setSpeed(M1Speed); M3Motor->setSpeed(M3Speed);
-  int goal = multiple*1780 + 287;//goal distance based on multiple parameter from blocks between wall
+  int goal = multiple*1780 + 215;//goal distance based on multiple parameter from blocks between wall
   unsigned int AlphaR_time = AlphaR.ping_median(5); // Send ping, get ping time in microseconds (uS).
   unsigned int AlphaL_time = AlphaL.ping_median(5); // Send ping, get ping time in microseconds (uS).
-  //difference from goal and absolute value for error correction
-  int differenceR = AlphaR_time - goal;
-  int differenceL = AlphaL_time - goal;
-  differenceR = abs(differenceR);
-  differenceL = abs(differenceL);
+  //difference from goal and absolute value for error correction  
+  int differenceL = AlphaL_time - goal; int differenceR = AlphaR_time - goal;  
+      differenceL = abs(differenceL);       differenceR = abs(differenceR);
   //loop for error correction
-  while(differenceR > 50 && differenceL > 50){
-    AlphaR_time = AlphaR.ping(); // Send ping, get ping time in microseconds (uS).
-    AlphaL_time = AlphaL.ping(); // Send ping, get ping time in microseconds (uS)
-    //difference from goal and absolute value for error correction
-    differenceR = AlphaR_time - goal;
-    differenceL = AlphaL_time - goal;
-    int movement = (differenceR + differenceL)/2; //movement to give motion towards or away from wall
-    differenceR = abs(differenceR);
-    differenceL = abs(differenceL);
+  while(differenceR > 50 && differenceL > 50){   
+    AlphaL_time = AlphaL.ping();            AlphaR_time = AlphaR.ping(); 
+    differenceL = AlphaL_time - goal;       differenceR = AlphaR_time - goal;
+    int movement = (differenceR + differenceL)/2; //movement to give motion towards or away from wall    
+    differenceL = abs(differenceL);         differenceR = abs(differenceR);
     //motion adjustment based on positive or negative movement to or from wall
     if(movement>0){
       M1Motor->run(FORWARD);  M3Motor->run(BACKWARD);
@@ -760,8 +458,6 @@ void offset_Alpha(int multiple){
     }  
   }
   M1Motor->run(RELEASE);  M3Motor->run(RELEASE);  //turn off motors
-
-  
 }
 
 
@@ -772,20 +468,14 @@ void offset_Bravo(int multiple){
   unsigned int BravoR_time = BravoR.ping_median(5); // Send ping, get ping time in microseconds (uS).
   unsigned int BravoL_time = BravoL.ping_median(5); // Send ping, get ping time in microseconds (uS).
   //difference from goal and absolute value for error correction
-  int differenceR = BravoR_time - goal;
-  int differenceL = BravoL_time - goal;
-  differenceR = abs(differenceR);
-  differenceL = abs(differenceL);
+  int differenceL = BravoL_time - goal; int differenceR = BravoR_time - goal;
+  differenceL = abs(differenceL);           differenceR = abs(differenceR);
   //loop for error correction
-  while(differenceR > 50 && differenceL > 50){
-    BravoR_time = BravoR.ping(); // Send ping, get ping time in microseconds (uS).
-    BravoL_time = BravoL.ping(); // Send ping, get ping time in microseconds (uS)
-    //difference from goal and absolute value for error correction
-    differenceR = BravoR_time - goal;
-    differenceL = BravoL_time - goal;
-    int movement = (differenceR + differenceL)/2; //movement to give motion towards or away from wall
-    differenceR = abs(differenceR);
-    differenceL = abs(differenceL);
+  while(differenceR > 50 && differenceL > 50){   
+    BravoL_time = BravoL.ping();            BravoR_time = BravoR.ping();
+    differenceL = BravoL_time - goal;       differenceR = BravoR_time - goal;
+    int movement = (differenceR + differenceL)/2; //movement to give motion towards or away from wall   
+    differenceL = abs(differenceL);         differenceR = abs(differenceR);
     //motion adjustment based on positive or negative movement to or from wall
     if(movement>0){
       M2Motor->run(BACKWARD);  M4Motor->run(FORWARD);
@@ -801,24 +491,18 @@ void offset_Bravo(int multiple){
 //adjust offset from wall based on ultrasonic readings
 void offset_Charlie(int multiple){
   M1Motor->setSpeed(M1Speed); M3Motor->setSpeed(M3Speed);
-  int goal = multiple*1780 + 287;//goal distance based on multiple parameter from blocks between wall
+  int goal = multiple*1780 + 215;//goal distance based on multiple parameter from blocks between wall
   unsigned int CharlieR_time = CharlieR.ping_median(5); // Send ping, get ping time in microseconds (uS).
   unsigned int CharlieL_time = CharlieL.ping_median(5); // Send ping, get ping time in microseconds (uS).
   //difference from goal and absolute value for error correction
-  int differenceR = CharlieR_time - goal;
-  int differenceL = CharlieL_time - goal;
-  differenceR = abs(differenceR);
-  differenceL = abs(differenceL);
+  int differenceL = CharlieL_time - goal; int differenceR = CharlieR_time - goal;
+  differenceL = abs(differenceL);             differenceR = abs(differenceR);
   //loop for error correction
-  while(differenceR > 50 && differenceL > 50){
-    CharlieR_time = CharlieR.ping(); // Send ping, get ping time in microseconds (uS).
-    CharlieL_time = CharlieL.ping(); // Send ping, get ping time in microseconds (uS)
-    //difference from goal and absolute value for error correction
-    differenceR = CharlieR_time - goal;
-    differenceL = CharlieL_time - goal;
-    int movement = (differenceR + differenceL)/2; //movement to give motion towards or away from wall
-    differenceR = abs(differenceR);
-    differenceL = abs(differenceL);
+  while(differenceR > 50 && differenceL > 50){    
+    CharlieL_time = CharlieL.ping();        CharlieR_time = CharlieR.ping(); 
+    differenceL = CharlieL_time - goal;       differenceR = CharlieR_time - goal;
+    int movement = (differenceR + differenceL)/2; //movement to give motion towards or away from wall    
+    differenceL = abs(differenceL);           differenceR = abs(differenceR);
     //motion adjustment based on positive or negative movement to or from wall
     if(movement>0){
       M1Motor->run(BACKWARD);  M3Motor->run(FORWARD);
@@ -833,24 +517,18 @@ void offset_Charlie(int multiple){
 //adjust offset from wall based on ultrasonic readings
 void offset_Delta(int multiple){
   M2Motor->setSpeed(M2Speed); M4Motor->setSpeed(M4Speed); 
-  int goal = multiple*1780 + 287; //goal distance based on multiple parameter from blocks between wall
+  int goal = multiple*1780 + 215; //goal distance based on multiple parameter from blocks between wall
   unsigned int DeltaR_time = DeltaR.ping_median(5); // Send ping, get ping time in microseconds (uS).
   unsigned int DeltaL_time = DeltaL.ping_median(5); // Send ping, get ping time in microseconds (uS).
-  //difference from goal and absolute value for error correction
-  int differenceR = DeltaR_time - goal;
-  int differenceL = DeltaL_time - goal;
-  differenceR = abs(differenceR);
-  differenceL = abs(differenceL);
+  //difference from goal and absolute value for error correction 
+  int differenceL = DeltaL_time - goal; int differenceR = DeltaR_time - goal;
+  differenceL = abs(differenceL);           differenceR = abs(differenceR);
   //loop for error correction
-  while(differenceR > 50 && differenceL > 50){
-    DeltaR_time = DeltaR.ping(); // Send ping, get ping time in microseconds (uS).
-    DeltaL_time = DeltaL.ping(); // Send ping, get ping time in microseconds (uS)
-    //difference from goal and absolute value for error correction
-    differenceR = DeltaR_time - goal;
-    differenceL = DeltaL_time - goal;
-    int movement = (differenceR + differenceL)/2; //movement to give motion towards or away from wall
-    differenceR = abs(differenceR);
-    differenceL = abs(differenceL);
+  while(differenceR > 50 && differenceL > 50){    
+    DeltaL_time = DeltaL.ping();            DeltaR_time = DeltaR.ping();    
+    differenceL = DeltaL_time - goal;       differenceR = DeltaR_time - goal;
+    int movement = (differenceR + differenceL)/2; //movement to give motion towards or away from wall   
+    differenceL = abs(differenceL);         differenceR = abs(differenceR);
     //motion adjustment based on positive or negative movement to or from wall
     if(movement>0){
       M2Motor->run(FORWARD);  M4Motor->run(BACKWARD);
@@ -873,12 +551,10 @@ void align_Alpha(int multiple){
            int difference  = AlphaR_time - AlphaL_time;
                difference  = abs(difference);
   //loop that turns until parrallel with wall  
-           int goal        = 10*multiple;    
-           int cw          = 0; 
+           int goal        = 10*multiple;     
            int ccw         = 0;      
-  while(difference > goal){
-    AlphaR_time = AlphaR.ping();
-    AlphaL_time = AlphaL.ping();
+  while(difference > goal){   
+    AlphaL_time = AlphaL.ping();   AlphaR_time = AlphaR.ping();
     difference  = AlphaR_time - AlphaL_time;
     //when difference is positive turn cw, when negative turn ccw
     if(difference>0){
@@ -912,11 +588,9 @@ void align_Bravo(int multiple){
                difference     = abs(difference);         
   //loop that turns until parrallel with wall
            int goal           = 10*multiple;  
-           int cw             = 0;
            int ccw            = 0;           
-  while(difference > goal){
-    BravoR_time = BravoR.ping();
-    BravoL_time = BravoL.ping();
+  while(difference > goal){   
+    BravoL_time = BravoL.ping();  BravoR_time = BravoR.ping();
     difference  = BravoR_time - BravoL_time;
     //when difference is positive turn cw, when negative turn ccw
     if(difference>0){
@@ -948,13 +622,11 @@ void align_Charlie(int multiple){
   unsigned int CharlieL_time = CharlieL.ping_median(5);
            int difference  = CharlieR_time - CharlieL_time;
            int goal        = 10*multiple;
-           int cw          = 0;
            int ccw         = 0;
                difference  = abs(difference);
   //loop that turns until parrallel with wall             
-  while(difference > goal){
-    CharlieR_time = CharlieR.ping();
-    CharlieL_time = CharlieL.ping();
+  while(difference > goal){    
+    CharlieL_time = CharlieL.ping();  CharlieR_time = CharlieR.ping();
     difference  = CharlieR_time - CharlieL_time;
     //when difference is positive turn cw, when negative turn ccw
     if(difference>0){
@@ -986,13 +658,11 @@ void align_Delta(int multiple){
   unsigned int DeltaL_time = DeltaL.ping_median(5);
            int difference  = DeltaR_time - DeltaL_time;
            int goal        = 10*multiple;
-           int cw          = 0;
            int ccw         = 0;
                difference  = abs(difference);
   //loop that turns until parrallel with wall             
-  while(difference > goal){
-    DeltaR_time = DeltaR.ping();
-    DeltaL_time = DeltaL.ping();
+  while(difference > goal){    
+    DeltaL_time = DeltaL.ping();  DeltaR_time = DeltaR.ping();
     difference  = DeltaR_time - DeltaL_time;
     //when difference is positive turn cw, when negative turn ccw
     if(difference>0){
@@ -1014,53 +684,82 @@ void align_Delta(int multiple){
   M3Motor->run(RELEASE); M4Motor->run(RELEASE);
 }
 
+//function that will go to an x,y position based on your current x,y position
 void Go_to(int x_finish, int y_finish){
   Serial.println("inloop");
   //int y_finish = 0;
   int x_difference = x_finish - x_pos;
   int y_difference = y_finish - y_pos;
-  while(y_difference != 0){
-    Serial.println("y_loop");
-    Serial.println(y_difference);
-    while(x_difference != 0){
-      Serial.println("x_loop");
-      Serial.println(x_difference);
-      if(x_difference>0){
+  while(x_difference != 0){
+    Serial.println("x_loop");
+    Serial.println(x_difference);
+    if(x_difference>0){
+      if(x_pos<3){
         align_Bravo(x_pos);
         Right(oneBlock);
         offset_Bravo(x_pos);
-        offset_Charlie(y_pos);
         align_Bravo(x_pos);
       }
-      if(x_difference<0){
+      else{
+        align_Delta(6 - x_pos);
+        Right(oneBlock);
+        offset_Delta(6 - x_pos);
+        align_Delta(6 - x_pos);
+      }
+    }
+    if(x_difference<0){
+      if(x_pos<3){
         align_Bravo(x_pos);
         Left(oneBlock);
         offset_Bravo(x_pos);
-        offset_Charlie(y_pos);
         align_Bravo(x_pos);
       }
-      Serial.println(x_pos);
-      Serial.println(x_difference);
+      else{
+        align_Delta(6 - x_pos);
+        Left(oneBlock);
+        offset_Delta(6 - x_pos);
+        align_Delta(6 - x_pos);
+      }
+    }
       x_difference = x_finish - x_pos;
     }
+  while(y_difference != 0){
+    Serial.println("y_loop");
+    Serial.println(y_difference);
+    
     if(y_difference>0){
-      align_Bravo(x_pos);
-      Forward(oneBlock);
-      offset_Bravo(x_pos);
-      offset_Charlie(y_pos);
-      align_Bravo(x_pos);
+      if(y_pos<3){
+        align_Charlie(y_pos);
+        Forward(oneBlock);
+        offset_Charlie(y_pos);
+        align_Charlie(y_pos);
+      }
+      else{
+        align_Alpha(6 - y_pos);
+        Forward(oneBlock);
+        offset_Alpha(6 - y_pos);
+        align_Alpha(6 - y_pos);
+      }
     }
     if(y_difference<0){
-      align_Bravo(x_pos);
-      Backward(oneBlock);
-      offset_Bravo(x_pos);
-      offset_Charlie(y_pos);
-      align_Bravo(x_pos);
+      if(y_pos<3){
+        align_Charlie(y_pos);
+        Backward(oneBlock);
+        offset_Charlie(y_pos);
+        align_Charlie(y_pos);
+      }
+      else{
+        align_Alpha(6 - y_pos);
+        Backward(oneBlock);
+        offset_Alpha(6 - y_pos);
+        align_Alpha(6 - y_pos);
+      }
     }
     y_difference = y_finish - y_pos;
   }
 }
 
+  // function that will determine the number needed for offset and align based on obstacles
 void knowledge(){
   int offsetx_final = 6;
   int offsety_final = 6;
