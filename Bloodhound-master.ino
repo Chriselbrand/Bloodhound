@@ -52,6 +52,12 @@ NewPing CharlieR(CharlieR_TRIGGER, CharlieR_ECHO, MAX_DISTANCE);
 #define CharlieL_ECHO      23
 NewPing CharlieL(CharlieL_TRIGGER, CharlieL_ECHO, MAX_DISTANCE);  
 
+//definitions of map matrix designators
+#define UNKNOWN             0
+#define VOID                1
+#define OBJECTIVE           2
+#define DEAD_END            3
+
 //motor shield library
 #include <Adafruit_MotorShield.h>
 #include "utility/Adafruit_MS_PWMServoDriver.h"
