@@ -328,8 +328,8 @@ void Forward(int Blocks){
   delay(200);
   int A_time = (AlphaR_time + AlphaL_time)/2;
   if(A_time>0 && A_time<800){
-    obstaclex[obnum] = x_pos;
-    obstacley[obnum] = y_pos++;
+    obstaclex[x_pos] = 1;
+    obstacley[y_pos++] = 1;
     
     if(x_pos>3 && y_pos>3){
       align_Delta(1);
