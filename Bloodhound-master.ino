@@ -109,8 +109,7 @@ int obstaclex[10];    int obstacley[10];
 int obnum;// number of obstacles avoided
 
 //arrays to use for determining under obstacle
-int OT_x[10];         int OT_y[10];
-int DE_x[10];         int DE_y[10];
+int map[10][10];
 
 /**************************************************************************START OF PROGRAM***************************************************************************************************/
 
@@ -179,12 +178,16 @@ void setup() {
 
 /**************************BEGIN GRID SEARCH************************************/  
   
-  while (y_pos < 5 || x_pos < 5)            //ends upon arrival at F2 (row 5, col 5)
+  while (x_pos < 5 || y_pos < 5)            //ends upon arrival at F2 (row 5, col 5)
 {
   if (x_pos % 2 == 1 && y_pos < 5)        //odd column, go forward
   {
+    ////update obstacle matrix in front and to right
+    ////check obstacle matrix for next block
     Go_to( x_pos , y_pos + 1 );
     Knock();
+    //int currentBlock = ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    map[x_pos][y_pos] = currentBlock
     matrix.drawPixel(y_pos, x_pos, LED_RED);
     matrix.writeDisplay();       delay(500);
 //    if (row < 
@@ -193,6 +196,8 @@ void setup() {
   {
     Go_to( x_pos + 1 , y_pos );
     Knock();
+    //int currentBlock = ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    map[x_pos][y_pos] = currentBlock
     matrix.drawPixel(y_pos, x_pos, LED_GREEN);
     matrix.writeDisplay();         delay(500);
   }
@@ -200,6 +205,8 @@ void setup() {
   {
     Go_to( x_pos , y_pos - 1 );
     Knock();
+    //int currentBlock = ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    map[x_pos][y_pos] = currentBlock
     matrix.drawPixel(y_pos, x_pos, LED_GREEN);
     matrix.writeDisplay();         delay(500);
   }
@@ -207,11 +214,15 @@ void setup() {
   {
     Go_to( x_pos + 1 , y_pos );
     Knock();
+    //int currentBlock = ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    map[x_pos][y_pos] = currentBlock
     matrix.drawPixel(y_pos, x_pos, LED_RED);
     matrix.writeDisplay();       delay(500);
   }
 }
 /*******************************END GRID SEARCH***************************/
+  
+  //go to, uncover, and read cache die
   
   //return function since last space was (5,5) we are finished
   
