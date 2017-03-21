@@ -1,0 +1,12 @@
+//void square_check(){
+//  digitalWrite(Thomas_start,HIGH);
+//  int finished = digitalRead(Thomas_end);
+//  while(finished==0){
+//    int Dead_end  = digitalRead(Knock);
+//    int OT        = digitalRead(tic);
+//        finished  = digitalRead(Thomas_end);
+//  }
+//  if(Knock){/*show blue*/}
+//  if(tic){/*show red*/}
+//  digitalWrite(Thomas_start,LOW);
+//}
