@@ -54,7 +54,7 @@ NewPing CharlieL(CharlieL_TRIGGER, CharlieL_ECHO, MAX_DISTANCE);
 
 //definitions of map matrix designators
 #define UNKNOWN             0
-#define VOID                1
+#define SOLID               1
 #define OBJECTIVE           2
 #define DEAD_END            3
 
@@ -105,11 +105,12 @@ int grabber_finished = 180;
 int x_pos = 0;        int y_pos = 0;  
 
 //arrays to use for obstacles
-int obstaclex[10];    int obstacley[10];
+int obstaclex[10];    int obstacley[10];  //shows what cols and rows obstacles were detected in
+int obstacle_map[7][7];                 //map of obstacles
 int obnum;// number of obstacles avoided
 
 //arrays to use for determining under obstacle
-int map[10][10];
+int map[7][7];                          //map of detected grid locations
 
 /**************************************************************************START OF PROGRAM***************************************************************************************************/
 
@@ -185,8 +186,7 @@ void setup() {
     ////update obstacle matrix in front and to right
     ////check obstacle matrix for next block
     Go_to( x_pos , y_pos + 1 );
-    Knock();
-    //int currentBlock = ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    blockStatus();    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     map[x_pos][y_pos] = currentBlock
     matrix.drawPixel(y_pos, x_pos, LED_RED);
     matrix.writeDisplay();       delay(500);
@@ -195,8 +195,7 @@ void setup() {
   else if (x_pos % 2 == 1 && y_pos == 5)   //top of odd column, go right
   {
     Go_to( x_pos + 1 , y_pos );
-    Knock();
-    //int currentBlock = ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    blockStatus();    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     map[x_pos][y_pos] = currentBlock
     matrix.drawPixel(y_pos, x_pos, LED_GREEN);
     matrix.writeDisplay();         delay(500);
@@ -204,8 +203,7 @@ void setup() {
   else if (x_pos %2 == 0 && y_pos > 1)    //even column, go backward
   {
     Go_to( x_pos , y_pos - 1 );
-    Knock();
-    //int currentBlock = ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    blockStatus();    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     map[x_pos][y_pos] = currentBlock
     matrix.drawPixel(y_pos, x_pos, LED_GREEN);
     matrix.writeDisplay();         delay(500);
@@ -213,8 +211,7 @@ void setup() {
   else if (x_pos %2 == 0 && y_pos == 1)    //bottom of even column, go right
   {
     Go_to( x_pos + 1 , y_pos );
-    Knock();
-    //int currentBlock = ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    blockStatus();    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     map[x_pos][y_pos] = currentBlock
     matrix.drawPixel(y_pos, x_pos, LED_RED);
     matrix.writeDisplay();       delay(500);
@@ -230,11 +227,34 @@ void setup() {
   
 /**********************************************************************START OF FUNCTIONS(DANCE MOVES)****************************************************************************************/
 
-//knock funtion that knocks and returns
-void Knock(){
-  digitalWrite(knocker,HIGH);   delay(200);//open mosfet to drive solenoid
-  digitalWrite(knocker,LOW);    delay(200);//close mosfet to return solenoid
+void blockStatus(){
+  
+  bool solid = FALSE;
+  bool OT = FALSE;
+  bool dead_end = FALSE;
+  
+  digitalWrite(Thomas_start,HIGH);
+  
+  while(solid == OT && solid == dead_end){
+    
+    solid    = digitalRead(teensy_solid);
+    OT       = digitalRead(teensy_OT);
+    dead_end = digitalRead(teensy_DE);
+    
+  }
+  
+  digitalWrite(Thomas_start,LOW);
+  
+  if (OT == TRUE){
+    map[x_pos][y_pos] = OBJECTIVE;
+  } else if (dead_end == TRUE) {
+    map[x_pos][y_pos] = DEAD_END;
+  } else if (solid == TRUE) {
+    map[x_pos][y_pos] = SOLID; 
+  }
+  
 }
+
 // function for placement of camera to cache lid
 void Camera(){
   align_Alpha(1);
