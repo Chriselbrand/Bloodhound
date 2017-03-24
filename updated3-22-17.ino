@@ -8,31 +8,25 @@
 #include <Wire.h>  //i2c communication
 
 //neo pixel library
+#include <Adafruit_GFX.h>
 #include <Adafruit_NeoPixel.h>
 #ifdef __AVR__
   #include <avr/power.h>
 #endif
 
 //neopixel setup
-#define neopixel 6
+#define neopixel   6
 #define numpixels 64
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(numpixels, neopixel, NEO_GRB + NEO_KHZ800);       
 int neo_pos = 0;              
                     
-                    //   Kemp <-> Cory
-#define UP 53       //   blue <-> blue
-#define DOWN 51     //  green <-> green
-#define LEFT 49     // yellow <-> yellow
-#define RIGHT 47    // orange <-> orange
-#define TRANSMIT 43 //  brown <-> brown
-#define RECEIVE 45  //    red <-> red
-
-//matrix library
-#include <Adafruit_GFX.h>
-//#include "Adafruit_LEDBackpack.h"
-
-//create matrix object
-//Adafruit_BicolorMatrix matrix = Adafruit_BicolorMatrix();
+                          //   Kemp <-> Cory
+#define UP       53       //   blue <-> blue
+#define DOWN     51       //  green <-> green
+#define LEFT     49       // yellow <-> yellow
+#define RIGHT    47       // orange <-> orange
+#define TRANSMIT 43       //  brown <-> brown
+#define RECEIVE  45       //    red <-> red
 
 //Ultrasonics library
 #include <NewPing.h>
@@ -107,6 +101,9 @@ int grabber_start    =  75;
 int grabber_cache    =   0;
 int grabber_finished = 180;
 
+//pin for green start button
+#define Starter 39
+
 /*****************************************************************************INITIALIZATION**************************************************************************************************/
 
 //initialize x,y cordinates
@@ -122,20 +119,16 @@ void setup() {
     if (F_CPU == 16000000) clock_prescale_set(clock_div_1);
   #endif
     //end of trinket special code
+  
+  //start neopixel and ready ligh
   pixels.begin();
   pixels.setBrightness(20);
   pixels.setPixelColor(neo_pos,pixels.Color(255,180,0)); //show yellow on (0,0)
   pixels.show();
   delay(500);
 
-  //start matrix and ready light
-//  matrix.begin(0x71); // matrix at 71 address
-//  matrix.clear();
-//  matrix.drawPixel(0, 0, LED_YELLOW);
-//  matrix.writeDisplay();  delay(500);
-  
   //initalize grabber pin and set to start position
-  grabber.attach(grabber_pin);
+  grabber.attach(grabber_pin );    
   grabber.write(grabber_start);
   
   //Set speed that will be used
@@ -156,66 +149,49 @@ void setup() {
   Serial.begin(57600);
 
   //set function and initial value of arduino <-> pi communication pins
-  pinMode(TRANSMIT ,OUTPUT);        pinMode(RECEIVE   ,INPUT);
+  pinMode(RECEIVE,INPUT);      pinMode(TRANSMIT,OUTPUT); 
+  pinMode(UP     ,INPUT);      pinMode(DOWN    ,INPUT );
+  pinMode(LEFT   ,INPUT);      pinMode(RIGHT   ,INPUT );
   
-                                    pinMode(UP        ,INPUT);
-  pinMode(LEFT      ,INPUT);                                        pinMode(RIGHT     ,INPUT);
-                                    pinMode(DOWN      ,INPUT);
-
-//  Start();
-//  Go_to(2,1);
-//  Camera();
-//  Cory();
-//  
-//
-//  Backward(oneBlock);
-
-Start();    Locate();
+  //set green button for input
+  pinMode(Starter,INPUT);
+  
+  //loop that goes until green button is pressed
+  bool dontGO=true;
+  int GO=0;
+  while(dontGO){GO=digitalRead(Starter);
+    if(GO==1){dontGO=false;}
+    delay(200);
+  }
+  
+  //warm up strecth
+  Start();    Locate();
   
 
 /**************************BEGIN GRID SEARCH************************************/  
 
-  while (y_pos < 5 || x_pos < 5){            //ends upon arrival at F2 (row 5, col 5)
-    if (x_pos % 2 == 1 && y_pos < 5){        //odd column, go forward
-      Go_to( x_pos , y_pos + 1 );    Calibrate(); Locate();
-      //Camera();
-      //delay(1000);
-      //Knock();
-      //display test results
-      //matrix.drawPixel(y_pos, x_pos, LED_RED);
-      //matrix.writeDisplay();       delay(500);
+  while(y_pos<5||x_pos<5){            //ends upon arrival at F2 (row 5, col 5)
+    //odd column electric slide forward
+    if (x_pos%2==1&&y_pos<5)       {Go_to(x_pos,y_pos+1);    
+      Calibrate();  Locate();
     }
-    else if (x_pos % 2 == 1 && y_pos == 5){   //top of odd column, go right
-      Go_to( x_pos + 1 , y_pos );    Calibrate();   Locate();
-      //Camera();
-      //delay(1000);
-      //Knock();
-      //display test results
-      //matrix.drawPixel(y_pos, x_pos, LED_GREEN);
-      //matrix.writeDisplay();         delay(500);
+    //top of odd column, slide to the right
+    else if(x_pos%2==1&&y_pos==5)  {Go_to(x_pos+1,y_pos);    
+      Calibrate();  Locate();
     }
-    else if (x_pos %2 == 0 && y_pos > 1){    //even column, go backward
-      Go_to( x_pos , y_pos - 1 );    Calibrate();   Locate();
-      //Camera();
-      //delay(1000);
-      //Knock();
-      //display test results
-      //matrix.drawPixel(y_pos, x_pos, LED_GREEN);
-      //matrix.writeDisplay();         delay(500);
+    //even column, electric slide backward
+    else if(x_pos%2==0&&y_pos>1)   {Go_to(x_pos,y_pos-1);    
+      Calibrate();  Locate();
     }
-    else if (x_pos %2 == 0 && y_pos == 1){    //bottom of even column, go right
-      Go_to( x_pos + 1 , y_pos );    Calibrate();   Locate();
-      //Camera();
-      //delay(1000);
-      //Knock();
-      //display test results
-      //matrix.drawPixel(y_pos, x_pos, LED_RED);
-      //matrix.writeDisplay();       delay(500);
+    //bottom of even column, slide to the right
+    else if(x_pos%2==0&&y_pos==1)  {Go_to(x_pos+1,y_pos);
+      Calibrate();  Locate();
     }
   }
 
   /*******************************END GRID SEARCH***************************/
-
+  
+  //Congratulations ET Everythings unlimited with the new TMobile ONE plan
   Home();
 }
   
@@ -229,7 +205,7 @@ void Start(){
   x_pos = 1;   y_pos = 1;   Calibrate();
   }
 
-//return to (0,0)
+//return to (0,0) from already known location
 void Home(){
   Go_to(1,5);               Calibrate();         
   Go_to(1,1);               Calibrate();         
@@ -239,31 +215,20 @@ void Home(){
   x_pos = 0;   y_pos = 0;   Calibrate();
   }
 
-// function for placement of camera to cache lid
-void Camera(){
-
-  if(x_pos<2){turnCW(3*Ninety);       
-                align_Alpha();    offset_Alpha(x_pos)  ;
-    if(y_pos<4){align_Bravo();    offset_Bravo(y_pos)  ;}
-    else       {align_Delta();    offset_Delta(6-y_pos);}
+//function that will go to an x,y position based on your current x,y position
+void Go_to(int x_finish, int y_finish){
+  int x_difference = x_finish - x_pos;
+  int y_difference = y_finish - y_pos;
+  while(x_difference != 0){
+    if(x_difference>0)  {Right(oneBlock);}
+    else                { Left(oneBlock);}
+      x_difference = x_finish - x_pos;
+    }
+  while(y_difference != 0){
+    if(y_difference>0)  { Forward(oneBlock);}
+    else                {Backward(oneBlock);}
+    y_difference = y_finish - y_pos;
   }
-  else if(x_pos>4){turnCW(Ninety);         
-                align_Alpha();    offset_Alpha(6-x_pos);
-    if(y_pos<4){align_Delta();    offset_Delta(y_pos)  ;}
-    else       {align_Bravo();    offset_Bravo(6-y_pos);}
-  }
-  else if(y_pos<4){turnCW(Ninety*2);
-                align_Alpha();    offset_Alpha(y_pos)  ;
-    if(x_pos<4){align_Delta();    offset_Delta(x_pos)  ;}
-    else       {align_Bravo();    offset_Bravo(6-x_pos);}
-  }
-  else if(y_pos>4){//no need to turn
-                align_Alpha();    offset_Alpha(y_pos)  ;
-    if(x_pos<4){align_Bravo();    offset_Bravo(x_pos)  ;}
-    else       {align_Delta();    offset_Delta(6-x_pos);}
-   }
-   align_Alpha();
-   offset_camera();//get to a close position on cache
 }
 
 //Move Right 12" so many Blocks times
@@ -658,24 +623,16 @@ void align_Delta(){
   delay(50);
 }
 
-//function that will go to an x,y position based on your current x,y position
-void Go_to(int x_finish, int y_finish){
-  int x_difference = x_finish - x_pos;
-  int y_difference = y_finish - y_pos;
+//Calibrate to block
+void Calibrate(){
+  if(x_pos<3)   {align_Bravo();   offset_Bravo(x_pos);     align_Bravo();}
+  else          {align_Delta();   offset_Delta(6-x_pos);   align_Delta();}
   
-  while(x_difference != 0){
-    if(x_difference>0)  {Right(oneBlock);}
-    else                { Left(oneBlock);}
-      x_difference = x_finish - x_pos;
-    }
-  
-  while(y_difference != 0){
-    if(y_difference>0)  { Forward(oneBlock);}
-    else                {Backward(oneBlock);}
-    y_difference = y_finish - y_pos;
-  }
+  if(y_pos<4)   {offset_Charlie(y_pos);                  align_Charlie();}
+  else          {offset_Alpha(6-y_pos);                    align_Alpha();}
 }
 
+//set neo_pos based ont the x_pos and y_pos values to light up correct led
 void Locate(){
   if(x_pos==0){neo_pos=y_pos;}
   if(x_pos==1){neo_pos=y_pos+8;}
@@ -686,42 +643,8 @@ void Locate(){
   if(x_pos==6){neo_pos=y_pos+48;}
   pixels.setPixelColor(neo_pos,pixels.Color(255,0,0)); //show yellow on (0,0)
   pixels.show();        delay(500);
-  
 }
 
-void Calibrate(){
-  if(x_pos<4)   {align_Bravo();   offset_Bravo(x_pos);     align_Bravo();}
-  else          {align_Delta();   offset_Delta(6-x_pos);   align_Delta();}
-  
-  if(y_pos<4)   {offset_Charlie(y_pos);                  align_Charlie();}
-  else          {offset_Alpha(6-y_pos);                    align_Alpha();}
-}
-
-void offset_camera(){
-  M1Motor->setSpeed(M1Speed); M3Motor->setSpeed(M3Speed);
-  int goal = 980;//goal distance based on multiple parameter from blocks between wall
-  unsigned int AlphaR_time = AlphaR.ping_median(5); // Send ping, get ping time in microseconds (uS).
-  unsigned int AlphaL_time = AlphaL.ping_median(5); // Send ping, get ping time in microseconds (uS).
-  //difference from goal and absolute value for error correction  
-  int differenceL = AlphaL_time - goal; int differenceR = AlphaR_time - goal;  
-      differenceL = abs(differenceL);       differenceR = abs(differenceR);
-  //loop for error correction
-  while(differenceR > 50 && differenceL > 50){   
-    AlphaL_time = AlphaL.ping();            AlphaR_time = AlphaR.ping(); 
-    differenceL = AlphaL_time - goal;       differenceR = AlphaR_time - goal;
-    int movement = (differenceR + differenceL)/2; //movement to give motion towards or away from wall    
-    differenceL = abs(differenceL);         differenceR = abs(differenceR);
-    //motion adjustment based on positive or negative movement to or from wall
-    if(movement>0){
-      M1Motor->run(FORWARD);  M3Motor->run(BACKWARD);
-    }
-    if(movement<0){
-      M1Motor->run(BACKWARD);  M3Motor->run(FORWARD);
-    }  
-  }
-  M1Motor->run(RELEASE);  M3Motor->run(RELEASE);  //turn off motors
-  delay(50);
-}
 
 void find_obstacles(){
   unsigned int AlphaL_time    = AlphaL.ping_median(5);
@@ -761,39 +684,89 @@ void find_obstacles(){
   delay(1000);
 }
 
-void Cory(){
-  int Cory = 1;
-  while(Cory){
+/*******************************************************COMM WITH CORY*****************************************************************/
 
+// function for placement of camera to cache lid
+void Camera(){
+  if(x_pos<2)           {turnCW(3*Ninety);       
+                align_Alpha();    offset_Alpha(x_pos)  ;
+    if(y_pos<4){align_Bravo();    offset_Bravo(y_pos)  ;}
+    else       {align_Delta();    offset_Delta(6-y_pos);}
+  }
+  else if(x_pos>4)      {turnCW(Ninety);         
+                align_Alpha();    offset_Alpha(6-x_pos);
+    if(y_pos<4){align_Delta();    offset_Delta(y_pos)  ;}
+    else       {align_Bravo();    offset_Bravo(6-y_pos);}
+  }
+  else if(y_pos<4)      {turnCW(Ninety*2);
+                align_Alpha();    offset_Alpha(y_pos)  ;
+    if(x_pos<4){align_Delta();    offset_Delta(x_pos)  ;}
+    else       {align_Bravo();    offset_Bravo(6-x_pos);}
+  }
+  else if(y_pos>4)      {//no need to turn
+                align_Alpha();    offset_Alpha(y_pos)  ;
+    if(x_pos<4){align_Bravo();    offset_Bravo(x_pos)  ;}
+    else       {align_Delta();    offset_Delta(6-x_pos);}
+   }
+   align_Alpha();
+   offset_camera();//get to a close position on cache
+}
+
+//moves close to lid
+void offset_camera(){
+  M1Motor->setSpeed(M1Speed); M3Motor->setSpeed(M3Speed);
+  int goal = 980;//goal distance based on multiple parameter from blocks between wall
+  unsigned int AlphaR_time = AlphaR.ping_median(5); // Send ping, get ping time in microseconds (uS).
+  unsigned int AlphaL_time = AlphaL.ping_median(5); // Send ping, get ping time in microseconds (uS).
+  //difference from goal and absolute value for error correction  
+  int differenceL = AlphaL_time - goal; int differenceR = AlphaR_time - goal;  
+      differenceL = abs(differenceL);       differenceR = abs(differenceR);
+  //loop for error correction
+  while(differenceR > 50 && differenceL > 50){   
+    AlphaL_time = AlphaL.ping();            AlphaR_time = AlphaR.ping(); 
+    differenceL = AlphaL_time - goal;       differenceR = AlphaR_time - goal;
+    int movement = (differenceR + differenceL)/2; //movement to give motion towards or away from wall    
+    differenceL = abs(differenceL);         differenceR = abs(differenceR);
+    //motion adjustment based on positive or negative movement to or from wall
+    if(movement>0) {M1Motor->run(FORWARD );  M3Motor->run(BACKWARD);}
+    if(movement<0) {M1Motor->run(BACKWARD);  M3Motor->run(FORWARD );}  
+  }
+  M1Motor->run(RELEASE);  M3Motor->run(RELEASE);  //turn off motors
+  delay(50);
+}
+
+void Cory(){
+  bool Cory=true;
+  while(Cory){
   digitalWrite(TRANSMIT,HIGH);
   delay(100);
   digitalWrite(TRANSMIT,LOW);
-
-                                              int move_up=digitalRead(UP);       
-    int move_left=digitalRead(LEFT);                                            int move_right=digitalRead(RIGHT);
-                                            int move_down=digitalRead(DOWN);
+  int move_up   = digitalRead(UP  );  int move_down  = digitalRead(DOWN );  
+  int move_left = digitalRead(LEFT);  int move_right = digitalRead(RIGHT);
+                                            
     //move based on high pin from cory
-    if(move_up)      {M1Motor->run(FORWARD) ;  M3Motor->run(BACKWARD);  delay(100);  M1Motor->run(RELEASE); M3Motor->run(RELEASE);} //forward 1/5 in
-    if(move_down)    {M1Motor->run(BACKWARD);  M3Motor->run(FORWARD) ;  delay(100);  M1Motor->run(RELEASE); M3Motor->run(RELEASE);} //backward
-    if(move_right)   {M2Motor->run(FORWARD) ;  M4Motor->run(BACKWARD);  delay(100);  M2Motor->run(RELEASE); M4Motor->run(RELEASE);} //right
-    if(move_left )   {M2Motor->run(BACKWARD);  M4Motor->run(FORWARD) ;  delay(100);  M2Motor->run(RELEASE); M4Motor->run(RELEASE);} //left
+    if(move_up   )   {M1Motor->run(FORWARD );  M3Motor->run(BACKWARD);  delay(100);  M1Motor->run(RELEASE); M3Motor->run(RELEASE);} //forward 1/5 in
+    if(move_down )   {M1Motor->run(BACKWARD);  M3Motor->run(FORWARD );  delay(100);  M1Motor->run(RELEASE); M3Motor->run(RELEASE);} //backward
+    if(move_right)   {M2Motor->run(FORWARD );  M4Motor->run(BACKWARD);  delay(100);  M2Motor->run(RELEASE); M4Motor->run(RELEASE);} //right
+    if(move_left )   {M2Motor->run(BACKWARD);  M4Motor->run(FORWARD );  delay(100);  M2Motor->run(RELEASE); M4Motor->run(RELEASE);} //left
     int reading = digitalRead(RECEIVE);
-    if(reading==1){Cory = 0;}// get out of loop when cory is finished
+    if(reading==1){Cory=false;}// get out of loop when cory is finished
   }
   //grab lid and place on porch with security guard
-  grabber.write(grabber_cache); delay(200);
+  grabber.write(grabber_cache   ); 
+  delay(200);
   grabber.write(grabber_finished);
 
   //This tells Cory that servo is moved
   digitalWrite(TRANSMIT, HIGH);
   delay(100);
-  digitalWrite(TRANSMIT, LOW);
+  digitalWrite(TRANSMIT, LOW );
 
   //This loop will wait until Pi is done with die
-  Cory = 1;
+  Cory=true;
   while(Cory){
     int reading = digitalRead(RECEIVE);
-    if(reading==1){Cory=0;}
+    if(reading==1){Cory=false;}
     delay(200);
   }
 }
