@@ -186,8 +186,7 @@ void setup() {
     ////update obstacle matrix in front and to right
     ////check obstacle matrix for next block
     Go_to( x_pos , y_pos + 1 );
-    blockStatus();    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    map[x_pos][y_pos] = currentBlock
+    blockStatus();
     matrix.drawPixel(y_pos, x_pos, LED_RED);
     matrix.writeDisplay();       delay(500);
 //    if (row < 
@@ -195,24 +194,21 @@ void setup() {
   else if (x_pos % 2 == 1 && y_pos == 5)   //top of odd column, go right
   {
     Go_to( x_pos + 1 , y_pos );
-    blockStatus();    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    map[x_pos][y_pos] = currentBlock
+    blockStatus();
     matrix.drawPixel(y_pos, x_pos, LED_GREEN);
     matrix.writeDisplay();         delay(500);
   }
   else if (x_pos %2 == 0 && y_pos > 1)    //even column, go backward
   {
     Go_to( x_pos , y_pos - 1 );
-    blockStatus();    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    map[x_pos][y_pos] = currentBlock
+    blockStatus();
     matrix.drawPixel(y_pos, x_pos, LED_GREEN);
     matrix.writeDisplay();         delay(500);
   }
   else if (x_pos %2 == 0 && y_pos == 1)    //bottom of even column, go right
   {
     Go_to( x_pos + 1 , y_pos );
-    blockStatus();    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    map[x_pos][y_pos] = currentBlock
+    blockStatus();
     matrix.drawPixel(y_pos, x_pos, LED_RED);
     matrix.writeDisplay();       delay(500);
   }
