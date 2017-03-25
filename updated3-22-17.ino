@@ -97,9 +97,7 @@ Servo grabber;
 
 //initialize grabber position to be used in code
 #define grabber_pin 10
-int grabber_start    =  75;
-int grabber_cache    =   0;
-int grabber_finished = 180;
+int grabber_start    = 180;
 
 //pin for green start button
 #define Starter 39
@@ -737,10 +735,11 @@ void offset_camera(){
 
 void Cory(){
   bool Cory=true;
-  while(Cory){
   digitalWrite(TRANSMIT,HIGH);
   delay(100);
   digitalWrite(TRANSMIT,LOW);
+  
+  while(Cory){
   int move_up   = digitalRead(UP  );  int move_down  = digitalRead(DOWN );  
   int move_left = digitalRead(LEFT);  int move_right = digitalRead(RIGHT);
                                             
@@ -753,9 +752,18 @@ void Cory(){
     if(reading==1){Cory=false;}// get out of loop when cory is finished
   }
   //grab lid and place on porch with security guard
-  grabber.write(grabber_cache   ); 
-  delay(200);
-  grabber.write(grabber_finished);
+  for(int down = 180; down >=5; down -=1){
+    grabber.write(down);
+    delay(10);
+  }
+  grabber.write(0);
+  delay(500);
+
+  for(int pos = 0; pos < 180; pos += 1){
+    grabber.write(pos);
+    delay(10);
+  }
+  delay(1000);
 
   //This tells Cory that servo is moved
   digitalWrite(TRANSMIT, HIGH);
