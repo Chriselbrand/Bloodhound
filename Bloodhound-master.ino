@@ -32,7 +32,7 @@ NewPing BravoL(BravoL_TRIGGER, BravoL_ECHO, MAX_DISTANCE);
 #define AlphaR_TRIGGER     28  
 #define AlphaR_ECHO        29 
 NewPing AlphaR(AlphaR_TRIGGER, AlphaR_ECHO, MAX_DISTANCE);  
-#define AlphaL_TRIGGER     30  
+#define AlphaL_TRIGGER     30   
 #define AlphaL_ECHO        31 
 NewPing AlphaL(AlphaL_TRIGGER, AlphaL_ECHO, MAX_DISTANCE);
 
