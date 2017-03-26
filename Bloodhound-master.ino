@@ -52,6 +52,12 @@ NewPing CharlieR(CharlieR_TRIGGER, CharlieR_ECHO, MAX_DISTANCE);
 #define CharlieL_ECHO      23
 NewPing CharlieL(CharlieL_TRIGGER, CharlieL_ECHO, MAX_DISTANCE);  
 
+//definitions of map matrix designators
+#define UNKNOWN             0
+#define SOLID               1
+#define OBJECTIVE           2
+#define DEAD_END            3
+
 //motor shield library
 #include <Adafruit_MotorShield.h>
 #include "utility/Adafruit_MS_PWMServoDriver.h"
@@ -99,12 +105,12 @@ int grabber_finished = 180;
 int x_pos = 0;        int y_pos = 0;  
 
 //arrays to use for obstacles
-int obstaclex[10];    int obstacley[10];
+int obstaclex[10];    int obstacley[10];  //shows what cols and rows obstacles were detected in
+int obstacle_map[7][7];                 //map of obstacles
 int obnum;// number of obstacles avoided
 
 //arrays to use for determining under obstacle
-int OT_x[10];         int OT_y[10];
-int DE_x[10];         int DE_y[10];
+int map[7][7];                          //map of detected grid locations
 
 /**************************************************************************START OF PROGRAM***************************************************************************************************/
 
@@ -173,39 +179,84 @@ void setup() {
 
 /**************************BEGIN GRID SEARCH************************************/  
   
-  while (y_pos < 5 || x_pos < 5)            //ends upon arrival at F2 (row 5, col 5)
-{
-  if (x_pos % 2 == 1 && y_pos < 5)        //odd column, go forward
-  {
-    Go_to( x_pos , y_pos + 1 );
-    Knock();
+  while (x_pos < 5 || y_pos < 5) {          //ends upon arrival at F2 (row 5, col 5)
+    if (x_pos % 2 == 1 && y_pos < 5)        //odd column, go forward
+    {
+      unsigned int AlphaR_time = AlphaR.ping_median(5);    delay(200);  //check for obstacle in front
+      unsigned int AlphaL_time = AlphaL.ping_median(5);    delay(200);
+      int A_time = (AlphaR_time + AlphaL_time)/2;
+      
+      if(A_time>0 && A_time<800)
+      {
+        obstacle_map[x_pos][y_pos+1] = 1;
+      }
+      
+      unsigned int DeltaR_time = DeltaR.ping_median(5);    delay(200);  //check for obstacle to right
+      unsigned int DeltaL_time = DeltaL.ping_median(5);    delay(200);
+      int D_time = (DeltaR_time + DeltaL_time)/2;
+      
+      if(D_time>0 && D_time<800)
+      {
+        obstacle_map[x_pos+1][y_pos] = 1;
+      }
+    
+    if (obstacle_map[x_pos][y_pos+1] == 0) {
+      Go_to( x_pos , y_pos + 1 );
+    } else {
+      if (x_pos == 1 || obstacle_map[x_pos-1][y_pos] == 1 || obstacle_map[x_pos-1][y_pos+2] == 1 || y_pos == 4) {
+        if (obstacle_map[x_pos+1][y_pos] == 0) {
+          Go_to( x_pos + 1 , y_pos );       //move right
+          Go_to( x_pos , y_pos + 1 );       //move forward//don't have to check for obstacle before moving forward because there can't be 2 obstacles in a line like that
+          if (y_pos < 5) {
+            ////check that next block forward is not an obstacle
+            if (obstacle_map[x_pos][y_pos+1] == 0) {
+              Go_to( x_pos , y_pos + 1 );   //move forward
+              Go_to( x_pos - 1 , y_pos );   //move left
+            }
+          } else {                          //case for obstacle to the right of original square
+            ///////////////////////////////////////WRITE THIS CASE
+            }
+          } else {                            //case for columns 3 and 5
+            Go_to( x_pos - 1 , y_pos );     //left
+            Go_to( x_pos , y_pos + 1);      //forward
+            if (y_pos < 5)
+            Go_to( x_pos , y_pos + 1);      //forward
+            Go_to( x_pos + 1 , y_pos );     //right
+          }
+        }
+      }
+    }
+      
+    blockStatus();
     matrix.drawPixel(y_pos, x_pos, LED_RED);
     matrix.writeDisplay();       delay(500);
 //    if (row < 
+    }
+    else if (x_pos % 2 == 1 && y_pos == 5)   //top of odd column, go right
+    {
+      Go_to( x_pos + 1 , y_pos );
+      blockStatus();
+      matrix.drawPixel(y_pos, x_pos, LED_GREEN);
+      matrix.writeDisplay();         delay(500);
+    }
+    else if (x_pos %2 == 0 && y_pos > 1)    //even column, go backward
+    {
+      Go_to( x_pos , y_pos - 1 );
+      blockStatus();
+      matrix.drawPixel(y_pos, x_pos, LED_GREEN);
+      matrix.writeDisplay();         delay(500);
+    }
+    else if (x_pos %2 == 0 && y_pos == 1)    //bottom of even column, go right
+    {
+      Go_to( x_pos + 1 , y_pos );
+      blockStatus();
+      matrix.drawPixel(y_pos, x_pos, LED_RED);
+      matrix.writeDisplay();       delay(500);
+    }
   }
-  else if (x_pos % 2 == 1 && y_pos == 5)   //top of odd column, go right
-  {
-    Go_to( x_pos + 1 , y_pos );
-    Knock();
-    matrix.drawPixel(y_pos, x_pos, LED_GREEN);
-    matrix.writeDisplay();         delay(500);
-  }
-  else if (x_pos %2 == 0 && y_pos > 1)    //even column, go backward
-  {
-    Go_to( x_pos , y_pos - 1 );
-    Knock();
-    matrix.drawPixel(y_pos, x_pos, LED_GREEN);
-    matrix.writeDisplay();         delay(500);
-  }
-  else if (x_pos %2 == 0 && y_pos == 1)    //bottom of even column, go right
-  {
-    Go_to( x_pos + 1 , y_pos );
-    Knock();
-    matrix.drawPixel(y_pos, x_pos, LED_RED);
-    matrix.writeDisplay();       delay(500);
-  }
-}
 /*******************************END GRID SEARCH***************************/
+  
+  //go to, uncover, and read cache die
   
   //return function since last space was (5,5) we are finished
   
@@ -213,11 +264,34 @@ void setup() {
   
 /**********************************************************************START OF FUNCTIONS(DANCE MOVES)****************************************************************************************/
 
-//knock funtion that knocks and returns
-void Knock(){
-  digitalWrite(knocker,HIGH);   delay(200);//open mosfet to drive solenoid
-  digitalWrite(knocker,LOW);    delay(200);//close mosfet to return solenoid
+void blockStatus(){
+  
+  bool solid = FALSE;
+  bool OT = FALSE;
+  bool dead_end = FALSE;
+  
+  digitalWrite(Thomas_start,HIGH);
+  
+  while(solid == OT && solid == dead_end){
+    
+    solid    = digitalRead(teensy_solid);
+    OT       = digitalRead(teensy_OT);
+    dead_end = digitalRead(teensy_DE);
+    
+  }
+  
+  digitalWrite(Thomas_start,LOW);
+  
+  if (OT == TRUE){
+    map[x_pos][y_pos] = OBJECTIVE;
+  } else if (dead_end == TRUE) {
+    map[x_pos][y_pos] = DEAD_END;
+  } else if (solid == TRUE) {
+    map[x_pos][y_pos] = SOLID; 
+  }
+  
 }
+
 // function for placement of camera to cache lid
 void Camera(){
   align_Alpha(1);
@@ -328,8 +402,8 @@ void Forward(int Blocks){
   delay(200);
   int A_time = (AlphaR_time + AlphaL_time)/2;
   if(A_time>0 && A_time<800){
-    obstaclex[obnum] = x_pos;
-    obstacley[obnum] = y_pos++;
+    obstaclex[x_pos] = 1;
+    obstacley[y_pos++] = 1;
     
     if(x_pos>3 && y_pos>3){
       align_Delta(1);
