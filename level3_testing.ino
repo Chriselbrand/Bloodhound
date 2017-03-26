@@ -145,3 +145,71 @@ while(y_difference != 0){
   }
 }
 
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+ void knowledge(){
+  int offsetx_final = 6;
+  int offsety_final = 6;
+  int differencex_final = 0;
+  int differencey_final = 0;
+  for(int i=0; i<obnum; i++){
+    if(y_pos == obstacley[i]){
+      int x_offset = obstaclex[i];
+      int offsetx_difference = x_offset - x_pos;
+      int offsetx_change = abs(offsetx_difference);
+      if(offsetx_change<offsetx_final){
+        offsetx_final = offsetx_change;
+        differencex_final = offsetx_difference;
+      }
+    }
+    if(x_pos == obstaclex[i]){
+      int y_offset = obstacley[i];
+      int offsety_difference = offsety_difference - y_pos;
+      int offsety_change = abs(offsety_difference);
+      if(offsety_change<offsety_final){
+        offsety_final = offsety_change;
+        differencey_final = offsety_difference;
+      }
+    }
+  }
+  if(offsetx_final < 6){
+    if(differencex_final<0){
+      align_Bravo(1);
+      offset_Bravo(offsetx_final);
+      align_Bravo(1);
+    }
+    if(differencex_final>0){
+      align_Delta(1);
+      offset_Delta(offsetx_final);
+      align_Delta(1);
+    }
+  }
+  if(offsety_final < 6){
+    if(differencey_final<0){
+      align_Charlie(1);
+      offset_Charlie(offsety_final);
+      align_Charlie(1);
+    }
+    if(differencey_final>0){
+      align_Alpha(1);
+      offset_Alpha(offsety_final);
+      align_Alpha(1);
+    }
+      
+  }
+}        
+         
+ 
