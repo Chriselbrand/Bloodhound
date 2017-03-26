@@ -182,12 +182,28 @@ void setup() {
   while (x_pos < 5 || y_pos < 5) {          //ends upon arrival at F2 (row 5, col 5)
     if (x_pos % 2 == 1 && y_pos < 5)        //odd column, go forward
     {
-    ////update obstacle matrix in front and to right
-    ////check obstacle matrix for next block
+      unsigned int AlphaR_time = AlphaR.ping_median(5);    delay(200);  //check for obstacle in front
+      unsigned int AlphaL_time = AlphaL.ping_median(5);    delay(200);
+      int A_time = (AlphaR_time + AlphaL_time)/2;
+      
+      if(A_time>0 && A_time<800)
+      {
+        obstacle_map[x_pos][y_pos+1] = 1;
+      }
+      
+      unsigned int DeltaR_time = DeltaR.ping_median(5);    delay(200);  //check for obstacle to right
+      unsigned int DeltaL_time = DeltaL.ping_median(5);    delay(200);
+      int D_time = (DeltaR_time + DeltaL_time)/2;
+      
+      if(D_time>0 && D_time<800)
+      {
+        obstacle_map[x_pos+1][y_pos] = 1;
+      }
+    
     if (obstacle_map[x_pos][y_pos+1] == 0) {
       Go_to( x_pos , y_pos + 1 );
     } else {
-      if (x_pos == 1) {
+      if (x_pos == 1 || obstacle_map[x_pos-1][y_pos] == 1 || obstacle_map[x_pos-1][y_pos+2] == 1) {
         if (obstacle_map[x_pos+1][y_pos] == 0) {
           Go_to( x_pos + 1 , y_pos );       //move right
           Go_to( x_pos , y_pos + 1 );       //move forward//don't have to check for obstacle before moving forward because there can't be 2 obstacles in a line like that
@@ -201,7 +217,16 @@ void setup() {
             ///////////////////////////////////////WRITE THIS CASE
           }
         } else {                            //case for columns 3 and 5
-          /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//           if (obstacle_map[x_pos-1][y_pos] == 0 && obstacle_map[x_pos-1][y_pos+2] == 0) {
+            Go_to( x_pos - 1 , y_pos );     //left
+            Go_to( x_pos , y_pos + 1);      //forward
+            Go_to( x_pos , y_pos + 1);      //forward
+            Go_to( x_pos + 1 , y_pos );     //right
+          } else {
+            
+            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            
+          }
         }
       }
     }
