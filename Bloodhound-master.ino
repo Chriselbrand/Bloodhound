@@ -179,40 +179,60 @@ void setup() {
 
 /**************************BEGIN GRID SEARCH************************************/  
   
-  while (x_pos < 5 || y_pos < 5)            //ends upon arrival at F2 (row 5, col 5)
-{
-  if (x_pos % 2 == 1 && y_pos < 5)        //odd column, go forward
-  {
+  while (x_pos < 5 || y_pos < 5) {          //ends upon arrival at F2 (row 5, col 5)
+    if (x_pos % 2 == 1 && y_pos < 5)        //odd column, go forward
+    {
     ////update obstacle matrix in front and to right
     ////check obstacle matrix for next block
-    Go_to( x_pos , y_pos + 1 );
+    if (obstacle_map[x_pos][y_pos+1] == 0) {
+      Go_to( x_pos , y_pos + 1 );
+    } else {
+      if (x_pos == 1) {
+        if (obstacle_map[x_pos+1][y_pos] == 0) {
+          Go_to( x_pos + 1 , y_pos );       //move right
+          Go_to( x_pos , y_pos + 1 );       //move forward//don't have to check for obstacle before moving forward because there can't be 2 obstacles in a line like that
+          if (y_pos < 5) {
+            ////check that next block forward is not an obstacle
+            if (obstacle_map[x_pos][y_pos+1] == 0) {
+              Go_to( x_pos , y_pos + 1 );   //move forward
+              Go_to( x_pos - 1 , y_pos );   //move left
+            }
+          } else {                          //case for obstacle to the right of original square
+            ///////////////////////////////////////WRITE THIS CASE
+          }
+        } else {                            //case for columns 3 and 5
+          /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        }
+      }
+    }
+      
     blockStatus();
     matrix.drawPixel(y_pos, x_pos, LED_RED);
     matrix.writeDisplay();       delay(500);
 //    if (row < 
+    }
+    else if (x_pos % 2 == 1 && y_pos == 5)   //top of odd column, go right
+    {
+      Go_to( x_pos + 1 , y_pos );
+      blockStatus();
+      matrix.drawPixel(y_pos, x_pos, LED_GREEN);
+      matrix.writeDisplay();         delay(500);
+    }
+    else if (x_pos %2 == 0 && y_pos > 1)    //even column, go backward
+    {
+      Go_to( x_pos , y_pos - 1 );
+      blockStatus();
+      matrix.drawPixel(y_pos, x_pos, LED_GREEN);
+      matrix.writeDisplay();         delay(500);
+    }
+    else if (x_pos %2 == 0 && y_pos == 1)    //bottom of even column, go right
+    {
+      Go_to( x_pos + 1 , y_pos );
+      blockStatus();
+      matrix.drawPixel(y_pos, x_pos, LED_RED);
+      matrix.writeDisplay();       delay(500);
+    }
   }
-  else if (x_pos % 2 == 1 && y_pos == 5)   //top of odd column, go right
-  {
-    Go_to( x_pos + 1 , y_pos );
-    blockStatus();
-    matrix.drawPixel(y_pos, x_pos, LED_GREEN);
-    matrix.writeDisplay();         delay(500);
-  }
-  else if (x_pos %2 == 0 && y_pos > 1)    //even column, go backward
-  {
-    Go_to( x_pos , y_pos - 1 );
-    blockStatus();
-    matrix.drawPixel(y_pos, x_pos, LED_GREEN);
-    matrix.writeDisplay();         delay(500);
-  }
-  else if (x_pos %2 == 0 && y_pos == 1)    //bottom of even column, go right
-  {
-    Go_to( x_pos + 1 , y_pos );
-    blockStatus();
-    matrix.drawPixel(y_pos, x_pos, LED_RED);
-    matrix.writeDisplay();       delay(500);
-  }
-}
 /*******************************END GRID SEARCH***************************/
   
   //go to, uncover, and read cache die
