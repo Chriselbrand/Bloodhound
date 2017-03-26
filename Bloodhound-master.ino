@@ -203,7 +203,7 @@ void setup() {
     if (obstacle_map[x_pos][y_pos+1] == 0) {
       Go_to( x_pos , y_pos + 1 );
     } else {
-      if (x_pos == 1 || obstacle_map[x_pos-1][y_pos] == 1 || obstacle_map[x_pos-1][y_pos+2] == 1) {
+      if (x_pos == 1 || obstacle_map[x_pos-1][y_pos] == 1 || obstacle_map[x_pos-1][y_pos+2] == 1 || y_pos == 4) {
         if (obstacle_map[x_pos+1][y_pos] == 0) {
           Go_to( x_pos + 1 , y_pos );       //move right
           Go_to( x_pos , y_pos + 1 );       //move forward//don't have to check for obstacle before moving forward because there can't be 2 obstacles in a line like that
@@ -215,17 +215,13 @@ void setup() {
             }
           } else {                          //case for obstacle to the right of original square
             ///////////////////////////////////////WRITE THIS CASE
-          }
-        } else {                            //case for columns 3 and 5
-//           if (obstacle_map[x_pos-1][y_pos] == 0 && obstacle_map[x_pos-1][y_pos+2] == 0) {
+            }
+          } else {                            //case for columns 3 and 5
             Go_to( x_pos - 1 , y_pos );     //left
             Go_to( x_pos , y_pos + 1);      //forward
+            if (y_pos < 5)
             Go_to( x_pos , y_pos + 1);      //forward
             Go_to( x_pos + 1 , y_pos );     //right
-          } else {
-            
-            /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            
           }
         }
       }
