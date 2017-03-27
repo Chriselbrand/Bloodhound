@@ -13,9 +13,7 @@ void look_around(){
            int A_time = (AlphaR_time + AlphaL_time)/2;
   if(A_time>0 && A_time<800){
     //save obstacle spot to be used later
-    obstaclex[obnum] = x_pos;
-    obstacley[obnum] = y_pos++;
-    obnum++;
+    obstacle_map[x_pos][y_pos+1] = 1;
   }
   //check left
   unsigned int BravoR_time = BravoR.ping_median(5);    delay(200);
@@ -40,9 +38,7 @@ void look_around(){
   unsigned int DeltaL_time = DeltaL.ping_median(5);    delay(200);
            int D_time = (DeltaR_time + DeltaL_time)/2;
   if(D_time>0 && D_time<800){
-    obstaclex[obnum] = x_pos++;
-    obstacley[obnum] = y_pos;
-    obnum++;
+    obstacle_map[x_pos+1][y_pos] = 1;
   }
 
 
@@ -62,9 +58,9 @@ void Go_to(int x_finish, int y_finish){
     //if need to go right
     if(x_difference>0)  {
       //check if object is between xpos and desired pos
-      for(int i=0;i<obnum;i++;){
-        if(obstaclex[i]>x_pos && obstaclex[i]<=x_finish){
-          int x_finish = obstacle_x[i]-1;
+      for(int i=x_finish;i>x_pos;i--;){
+        if(obstacle_map[i][y_pos] = 1){
+          int x_finish = i-1;
           x_counter = 1;
         }
         //go right if no objects
@@ -74,9 +70,9 @@ void Go_to(int x_finish, int y_finish){
     //if need to go left
     if(x_difference<0){
       //check if object is between xpos and desired pos
-      for(int=0;i<obnum;i++;){
-        if(obstaclex[i]>=x_finish && obstaclex[i]<x_pos){
-          int x_finish = obstaclex[i]+1;
+      for(int i=x_finish;i<x_pos;i++;){
+        if(obstacle_map[i][y_pos]=1){
+          int x_finish = i+1;
           x_counter = 1;
         }
         //go left if no objects
@@ -102,10 +98,10 @@ while(y_difference != 0){
   //if need to go forward
     if(y_difference>0)  {
       //check to see if objects inbetween location and desired location
-      for(int i=0;i<obnum;i++;){
+      for(int i=y_finish;i>y_pos;i--;){
         //if obstacle update finish point so not to go to object
-        if(obstacley[i]>y_pos && obstacley[i]<=y_finish){
-          int y_finish = obstacle_y[i]-1;
+        if(obstacle_map[x_pos][i]==1){
+          int y_finish = i-1;
           y_counter = 1;
         }
         //go forward since no blocks
@@ -115,10 +111,10 @@ while(y_difference != 0){
     //if need to go backward
     if(y_difference<0){
       //look for objects in way
-      for(int=0;i<obnum;i++;){
+      for(int i=y_finish;i<y_pos;i++;){
         //if objects update finish and adjust counter
-        if(obstacley[i]>=y_finish && obstacley[i]<y_pos){
-          int y_finish = obstacle_y[i]+1;
+        if(obstacle_map[x_pos][i]==1){
+          int y_finish = i+1;
           y_counter = 1;
         }
         //go backward since no blocks
