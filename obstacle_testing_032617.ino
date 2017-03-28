@@ -129,6 +129,12 @@ int grid_map[7][7] ;                          //map of detected grid locations
 int x_pos = 0;        int y_pos = 0;  
 int y_counter = 0;
 
+//Serial Monitor Verbose Enables
+bool verboseUltrasonic = 1;
+bool verboseMotion = 1;
+bool verboseNavigation = 1;
+bool verboseGoto = 1;
+
 /**************************************************************************START OF PROGRAM***************************************************************************************************/
 
 //Line dancing moves
@@ -173,7 +179,7 @@ pinMode(teensy_wire,    INPUT);
   attachInterrupt(digitalPinToInterrupt(M4interrupt),M4count,RISING);
 
   //port setup for printing
-  Serial.begin(57600);
+  Serial.begin(115200);
 
   //set function and initial value of arduino <-> pi communication pins
   pinMode(RECEIVE,INPUT);      pinMode(TRANSMIT,OUTPUT); 
@@ -300,6 +306,7 @@ void look_around(){
  *  where you told go_to to go.
  */
 void Go_to(int x_finish, int y_finish){
+  if(verboseGoto == 1) {Serial.print(F("Go_to() called. Initial x_pos, y_pos: "); Serial.print(x_pos); Serial.print(" "); Serial.println(y_pos);}
   look_around();
   int left_stuck;    int right_stuck;   int up_stuck;   int down_stuck;
   //counts if there was object in x or y direction
@@ -316,6 +323,7 @@ void Go_to(int x_finish, int y_finish){
         if(obstacle_map[x_pos+1][y_pos] == 1 && x_counter == 0){
           x_finish = x_pos;//will make x_difference 0 and get out of loop
           x_counter = 1;//update counter to activate the change of finished position
+          if(verboseGoto == 1) {Serial.print(F("Block Found; Right direction."));}
         }
         //go right if no objects
         else{Right(oneBlock);    look_around();}//look around after every move to find obstacles
@@ -326,6 +334,7 @@ void Go_to(int x_finish, int y_finish){
         if(obstacle_map[x_pos-1][y_pos]==1 && x_counter == 0){
           x_finish = x_pos;//will make x_difference 0 and get out of loop
           x_counter = 1;//update counter to activate the change of finished position
+          if(verboseGoto == 1) {Serial.print(F("Block Found; Left direction."));}
         }
         //go left if no objects
         else{Left(oneBlock);    look_around;}//look around after every move to find obstacles
@@ -356,6 +365,7 @@ while(y_difference != 0){
           y_finish=y_pos;//make ydifference 0 and exit loop
           y_counter = 1;
           up_stuck = 1;
+          if(verboseGoto == 1) {Serial.print(F("Block Found; Forward direction."));}
         }
         //go forward since no blocks
         else{Forward(oneBlock); look_around();}//look around after every movement to search for obstacles
@@ -367,6 +377,7 @@ while(y_difference != 0){
           y_finish=y_pos;
           y_counter = 1;
           down_stuck = 1;
+          if(verboseGoto == 1) {Serial.print(F("Block Found; Backward direction."));}
         }
         //go backward since no blocks
         else{Backward(oneBlock); look_around();}
@@ -541,116 +552,145 @@ void turnCCW(int Blocks){
 
 //adjust offset from wall based on ultrasonic readings
 void offset_Alpha(int multiple){
+  if(verboseUltrasonic == 1) Serial.print(F("offset_Alpha called. Initial: AlphaR: "));
   M1Motor->setSpeed(M1Speed); M3Motor->setSpeed(M3Speed);
   int goal = multiple*1780 + 215;//goal distance based on multiple parameter from blocks between wall
   unsigned int AlphaR_time = AlphaR.ping_median(5); // Send ping, get ping time in microseconds (uS).
   unsigned int AlphaL_time = AlphaL.ping_median(5); // Send ping, get ping time in microseconds (uS).
+  if(verboseUltrasonic == 1) {Serial.print(AlphaR_time); Serial.print(F(" AlphaL:"); Serial.println(AlphaL_time)}
   //difference from goal and absolute value for error correction  
   int differenceL = AlphaL_time - goal; int differenceR = AlphaR_time - goal;  
       differenceL = abs(differenceL);       differenceR = abs(differenceR);
   //loop for error correction
   int gone=0;
   while(differenceR > 50 && differenceL > 50){   
+    if(verboseUltrasonic == 1) Serial.print(F("difference Alpha loop: AlphaL, AlphaR, diffL, diffR: "));
     AlphaL_time = AlphaL.ping();            AlphaR_time = AlphaR.ping(); 
     differenceL = AlphaL_time - goal;       differenceR = AlphaR_time - goal;
     int movement = (differenceR + differenceL)/2; //movement to give motion towards or away from wall    
     differenceL = abs(differenceL);         differenceR = abs(differenceR);
+    if(verboseUltrasonic == 1) {Serial.print(AlphaL_time); Serial.print(" "); Serial.print(AlphaR_time); Serial.print(" "); Serial.print(differenceL); Serial.print(" "); Serial.println(differenceR);}
     //motion adjustment based on positive or negative movement to or from wall
     if(movement>0&&gone==0){gone=1;
       M1Motor->run(FORWARD);  M3Motor->run(BACKWARD);
+      if(verboseMotion == 1) {Serial.print(F("offset_Alpha going forward. movement,gone: ")); Serial.print(movement); Serial.print(" "); Serial.println(gone);}
     }
     if(movement<0&&gone==0){gone=1;
       M1Motor->run(BACKWARD);  M3Motor->run(FORWARD);
+      if(verboseMotion == 1) {Serial.print(F("offset_Alpha going backward. movement,gone: ")); Serial.print(movement); Serial.print(" "); Serial.println(gone);}
     }  
   }
   M1Motor->run(RELEASE);  M3Motor->run(RELEASE);  //turn off motors
+  if(verboseMotion == 1) Serial.println(F("offset_Alpha finished."));
   delay(200);
 }
 
 
 //adjust offset from wall based on ultrasonic readings
 void offset_Bravo(int multiple){
+  if(verboseUltrasonic == 1) Serial.print(F("offset_Bravo called. Initial: BravoR: "));
   M2Motor->setSpeed(M2Speed); M4Motor->setSpeed(M4Speed); 
   int goal = multiple*1780 + 215; //goal distance based on multiple parameter from blocks between wall
   unsigned int BravoR_time = BravoR.ping_median(5); // Send ping, get ping time in microseconds (uS).
   unsigned int BravoL_time = BravoL.ping_median(5); // Send ping, get ping time in microseconds (uS).
+  if(verboseUltrasonic == 1) {Serial.print(BravoR_time); Serial.print(F(" BravoL:"); Serial.println(BravoL_time)}
   //difference from goal and absolute value for error correction
   int differenceL = BravoL_time - goal; int differenceR = BravoR_time - goal;
   differenceL = abs(differenceL);           differenceR = abs(differenceR);
   //loop for error correction
   int gone=0;
   while(differenceR > 50 && differenceL > 50){   
+    if(verboseUltrasonic == 1) Serial.print(F("difference Bravo loop: BravoR, BravoR, diffL, diffR: "));
     BravoL_time = BravoL.ping();            BravoR_time = BravoR.ping();
     differenceL = BravoL_time - goal;       differenceR = BravoR_time - goal;
     int movement = (differenceR + differenceL)/2; //movement to give motion towards or away from wall   
     differenceL = abs(differenceL);         differenceR = abs(differenceR);
+    if(verboseUltrasonic == 1) {Serial.print(BravoL_time); Serial.print(" "); Serial.print(BravoR_time); Serial.print(" "); Serial.print(differenceL); Serial.print(" "); Serial.println(differenceR);}
     //motion adjustment based on positive or negative movement to or from wall
     if(movement>0&&gone==0){gone=1;
       M2Motor->run(BACKWARD);  M4Motor->run(FORWARD);
+      if(verboseMotion == 1) {Serial.print(F("offset_Bravo going forward. movement,gone: ")); Serial.print(movement); Serial.print(" "); Serial.println(gone);}
     }
     if(movement<0&&gone==0){gone=1;
       M2Motor->run(FORWARD);  M4Motor->run(BACKWARD);
+      if(verboseMotion == 1) {Serial.print(F("offset_Bravo going backward. movement,gone: ")); Serial.print(movement); Serial.print(" "); Serial.println(gone);}
     }  
   }
   M2Motor->run(RELEASE);  M4Motor->run(RELEASE);  //turn off motors
+  if(verboseMotion == 1) Serial.println(F("offset_Bravo finished."));
   delay(200);
 }
 
 
 //adjust offset from wall based on ultrasonic readings
 void offset_Charlie(int multiple){
+  if(verboseUltrasonic == 1) Serial.print(F("offset_Charlie called. Initial: CharlieR: "));
   M1Motor->setSpeed(M1Speed); M3Motor->setSpeed(M3Speed);
   int goal = multiple*1780 + 215;//goal distance based on multiple parameter from blocks between wall
   unsigned int CharlieR_time = CharlieR.ping_median(5); // Send ping, get ping time in microseconds (uS).
   unsigned int CharlieL_time = CharlieL.ping_median(5); // Send ping, get ping time in microseconds (uS).
+  if(verboseUltrasonic == 1) {Serial.print(CharlieR_time); Serial.print(F(" CharlieL:"); Serial.println(CharlieL_time)}
   //difference from goal and absolute value for error correction
   int differenceL = CharlieL_time - goal; int differenceR = CharlieR_time - goal;
   differenceL = abs(differenceL);             differenceR = abs(differenceR);
   //loop for error correction
   int gone=0;
   while(differenceR > 50 && differenceL > 50){    
+    if(verboseUltrasonic == 1) Serial.print(F("difference Charlie loop: CharlieL, CharlieR, diffL, diffR: "));
     CharlieL_time = CharlieL.ping();        CharlieR_time = CharlieR.ping(); 
     differenceL = CharlieL_time - goal;       differenceR = CharlieR_time - goal;
     int movement = (differenceR + differenceL)/2; //movement to give motion towards or away from wall    
     differenceL = abs(differenceL);           differenceR = abs(differenceR);
+    if(verboseUltrasonic == 1) {Serial.print(CharlieL_time); Serial.print(" "); Serial.print(CharlieR_time); Serial.print(" "); Serial.print(differenceL); Serial.print(" "); Serial.println(differenceR);}
     //motion adjustment based on positive or negative movement to or from wall
     if(movement>0&&gone==0){gone=1;
       M1Motor->run(BACKWARD);  M3Motor->run(FORWARD);
+      if(verboseMotion == 1) {Serial.print(F("offset_Charlie going forward. movement,gone: ")); Serial.print(movement); Serial.print(" "); Serial.println(gone);}
     }
     if(movement<0&&gone==0){gone=1;
       M1Motor->run(FORWARD);  M3Motor->run(BACKWARD);
+      if(verboseMotion == 1) {Serial.print(F("offset_Charlie going backward. movement,gone: ")); Serial.print(movement); Serial.print(" "); Serial.println(gone);}
     }  
   }
   M1Motor->run(RELEASE);  M3Motor->run(RELEASE);  //turn off motors
+  if(verboseMotion == 1) Serial.println(F("offset_Charlie finished."));
   delay(200);
 }
 
 //adjust offset from wall based on ultrasonic readings
 void offset_Delta(int multiple){
+  if(verboseUltrasonic == 1) Serial.print(F("offset_Delta called. Initial: DeltaR: "));
   M2Motor->setSpeed(M2Speed); M4Motor->setSpeed(M4Speed); 
   int goal = multiple*1780 + 215; //goal distance based on multiple parameter from blocks between wall
   unsigned int DeltaR_time = DeltaR.ping_median(5); // Send ping, get ping time in microseconds (uS).
   unsigned int DeltaL_time = DeltaL.ping_median(5); // Send ping, get ping time in microseconds (uS).
+  if(verboseUltrasonic == 1) {Serial.print(DeltaR_time); Serial.print(F(" DeltaL:"); Serial.println(DeltaL_time)}
   //difference from goal and absolute value for error correction 
   int differenceL = DeltaL_time - goal;    int differenceR = DeltaR_time - goal;
       differenceL =   abs(differenceL);        differenceR =   abs(differenceR);
   //loop for error correction
   int gone=0;
   while(differenceR > 50 && differenceL > 50){    
+    if(verboseUltrasonic == 1) Serial.print(F("difference Delta loop: DeltaL, DeltaR, diffL, diffR: "));
     DeltaL_time =      DeltaL.ping();       DeltaR_time =      DeltaR.ping();    
     differenceL = DeltaL_time - goal;       differenceR = DeltaR_time - goal;
     int movement = (differenceR + differenceL)/2; //movement to give motion towards or away from wall   
     differenceL = abs(differenceL);         differenceR = abs(differenceR);
+    if(verboseUltrasonic == 1) {Serial.print(DeltaL_time); Serial.print(" "); Serial.print(DeltaR_time); Serial.print(" "); Serial.print(differenceL); Serial.print(" "); Serial.println(differenceR);}
     //motion adjustment based on positive or negative movement to or from wall
     if(movement>0&&gone==0){gone=1;
       M2Motor->run(FORWARD);  M4Motor->run(BACKWARD);
+      if(verboseMotion == 1) {Serial.print(F("offset_Delta going forward. movement,gone: ")); Serial.print(movement); Serial.print(" "); Serial.println(gone);}
     }
     if(movement<0&&gone==0){gone=1;
       M2Motor->run(BACKWARD);  M4Motor->run(FORWARD);
+      if(verboseMotion == 1) {Serial.print(F("offset_Delta going backward. movement,gone: ")); Serial.print(movement); Serial.print(" "); Serial.println(gone);}
     }  
   }
   M2Motor->run(RELEASE);  M4Motor->run(RELEASE);  //turn off motors
+  if(verboseMotion == 1) Serial.println(F("offset_Delta finished."));
   delay(200);
+                                                                      
 }
 
 //align when not parrallel with wall
