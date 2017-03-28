@@ -10,16 +10,23 @@
 //neo pixel library
 #include <Adafruit_GFX.h>
 #include <Adafruit_NeoPixel.h>
+#include <Adafruit_NeoMatrix.h>
+#include <gamma.h>
 #ifdef __AVR__
   #include <avr/power.h>
 #endif
 
-//neopixel setup
-#define neopixel   6
-#define numpixels 64
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(numpixels, neopixel, NEO_GRB + NEO_KHZ800);       
-int neo_pos = 0;              
-                    
+//neomatrix setup
+Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(8, 8, 6 /*pin*/,
+  NEO_MATRIX_BOTTOM     + NEO_MATRIX_RIGHT +
+  NEO_MATRIX_COLUMNS + NEO_MATRIX_PROGRESSIVE);
+
+//color definitions
+#define UNKNOWN_SQUARE  0
+#define DEAD_END        0x001F
+#define OBJECTIVE       0xF800
+#define START           0xFFE0
+
                           //   Kemp <-> Cory
 #define UP       53       //   blue <-> blue
 #define DOWN     51       //  green <-> green
@@ -154,6 +161,13 @@ void setup() {
   //set green button for input
   pinMode(Starter,INPUT);
   
+  matrix.begin();
+  matrix.clear();
+  matrix.setBrightness(10);
+
+  matrix.drawPixel(0,0,START);
+  matrix.show();
+  
   //loop that goes until green button is pressed
   bool dontGO=true;
   int GO=0;
@@ -188,6 +202,23 @@ void setup() {
   }
 
   /*******************************END GRID SEARCH***************************/
+  /******************************LED MATRIX OUTPUT**************************/
+  
+  matrix.begin();
+  matrix.clear();
+
+  matrix.drawPixel(0,0,START);
+  matrix.show();
+
+  matrix.setBrightness(10);
+
+  for (int y_pos = 0 ; y_pos<7 ; y_pos++) {
+    for (int x_pos = 0 ; x_pos<7 ; x_pos++) {
+      delay(500);
+      matrix.drawPixel(x_pos,y_pos,grid_map[x_pos][y_pos]);
+      matrix.show();
+    }
+  }
   
   //Congratulations ET Everythings unlimited with the new TMobile ONE plan
   Home();
