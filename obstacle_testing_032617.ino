@@ -264,6 +264,7 @@ void Home(){
   }
 
 void look_around(){
+  delay(100);
   //check forward
   unsigned int AlphaR_time = AlphaR.ping_median(5);   
   unsigned int AlphaL_time = AlphaL.ping_median(5);    
@@ -274,35 +275,32 @@ void look_around(){
   }
   //check backward
   unsigned int CharlieR_time = CharlieR.ping_median(5);    
-  unsigned int CharlieL_time = CharlieL.ping_median(5);    delay(200);
+  unsigned int CharlieL_time = CharlieL.ping_median(5); 
            int C_time = (CharlieR_time + CharlieL_time)/2;
   if(C_time>200 && C_time<00){
     obstacle_map[x_pos][y_pos-1] = 1;
-    //obstaclex[obnum] = x_pos;
-    //obstacley[obnum] = y_pos--;
-    //obnum++;
   }
 
   
   //check right
-  unsigned int DeltaR_time = DeltaR.ping_median(5);    delay(200);
-  unsigned int DeltaL_time = DeltaL.ping_median(5);    delay(200);
+  unsigned int DeltaR_time = DeltaR.ping_median(5);  
+  unsigned int DeltaL_time = DeltaL.ping_median(5);   
            int D_time = (DeltaR_time + DeltaL_time)/2;
   if(D_time>200 && D_time<600){
     obstacle_map[x_pos+1][y_pos] = 1;
   }
+  delay(100);
  
 }
-
-
-
-/* function that will bring you to the location you desire kinda. if the coordinates need to be changed based on objects in the way it will act accordingly and then will go to place you want.
- *  will also possibly go to spot that is one block away from location needed then the next step will be to go to the desired location
+/* the most hard to understand yet very useful function, your x and y position are already known and updated in the motion functions. based on where you are you can tell go to where you 
+ *  would like to be and it will bring you there. it only moves in one increment at a time that way it always knows if the next movement is safe based on any 1's in the obstacle map that
+ *  indicate an obstacle. the first look around function just looks in the first three squares around you to check and update any obstacles. the stuck variables are if you have tried going in
+ *  two directions they will know and give a seperate course since the previous logic has you stuck(failsafe). the x and y counter will let you know if there is obstacel in that direction and
+ *  it will adjust your movement based on if the variables are 1. the x and y difference is for when you go more than one square the loop will get going in the direction until you have arrived
+ *  where you told go_to to go.
  */
 void Go_to(int x_finish, int y_finish){
   look_around();
-  Serial.print("i'm here"); Serial.print(x_pos);Serial.print(" , ");Serial.println(y_pos);
-  Serial.print("i'm going here"); Serial.print(x_finish);Serial.print(" , ");Serial.println(y_finish);
   int left_stuck;    int right_stuck;   int up_stuck;   int down_stuck;
   //counts if there was object in x or y direction
   int x_counter = 0;
@@ -314,85 +312,92 @@ void Go_to(int x_finish, int y_finish){
   while(x_difference != 0){
     //if need to go right
     if(x_difference>0)  {
+      //if obstacle in the right direction stop where you are and update counter to adjust to new location
         if(obstacle_map[x_pos+1][y_pos] == 1 && x_counter == 0){
-        Serial.println("found a block before going right");
-          x_finish = x_pos;
-          x_counter = 1;
+          x_finish = x_pos;//will make x_difference 0 and get out of loop
+          x_counter = 1;//update counter to activate the change of finished position
         }
         //go right if no objects
-        else{Serial.println("going right");Right(oneBlock);    look_around();}
+        else{Right(oneBlock);    look_around();}//look around after every move to find obstacles
     }
     //if need to go left
     if(x_difference<0){
-      //check if object is between xpos and desired pos
-      Serial.print(obstacle_map[x_pos-1][y_pos]);Serial.println("obstacle when going left");
+      //if obstacle in the left direction stop where you are and update counter to adjust to new location
         if(obstacle_map[x_pos-1][y_pos]==1 && x_counter == 0){
-          Serial.println("found a block before going left");
-          int x_finish = x_pos;
-          x_counter = 1;
+          x_finish = x_pos;//will make x_difference 0 and get out of loop
+          x_counter = 1;//update counter to activate the change of finished position
         }
         //go left if no objects
-        else{Serial.println("going left");Left(oneBlock);    look_around;}
+        else{Left(oneBlock);    look_around;}//look around after every move to find obstacles
   }
-  //update difference to see if you are where you want to be
+  //update difference to see if you are where you want to be, if not continue loop until you are at the finished position
   x_difference = x_finish - x_pos;
   }
-  //if there was a block in x direction update y finish so that can move in y pos first then next goto will get you to location
+  //if there was a block in x direction update the movement to where you go around obstacle
   if(x_counter>0){
-    Serial.println("adjust x because of block");
+    //if in the upper quadrant go down then go to right
     if(y_pos>3){
       Go_to(x_pos,y_pos-1);  Go_to(x_pos+1,y_pos);
-      y_difference = 0;
+      y_difference = 0;//bypass next loop to be finished
     }
-    if(y_pos<4){
+    //if in the lower quadrant go up then go right
+    else if(y_pos<4){
       Go_to(x_pos,y_pos+1); Go_to(x_pos+1,y_pos);
-      y_difference = 0;
+      y_difference = 0;//bypass next loop to be finished
     }
   }
-  x_counter = 0;
+  x_counter = 0;//update counter just incase
   //while y is not at desired location
 while(y_difference != 0){
   //if need to go forward
     if(y_difference>0)  {
+      //if obstacle in the forward direction stop where you are and update the counter to change finished location
         if(obstacle_map[x_pos][y_pos+1]==1){
-          Serial.println("found a block before going forward");
-          y_finish=y_pos;
+          y_finish=y_pos;//make ydifference 0 and exit loop
           y_counter = 1;
           up_stuck = 1;
         }
         //go forward since no blocks
-        else{Serial.println("going forward");Forward(oneBlock); look_around();}
+        else{Forward(oneBlock); look_around();}//look around after every movement to search for obstacles
     }
     //if need to go backward
     if(y_difference<0){
       //look for objects in way
         if(obstacle_map[x_pos][y_pos-1]==1){
-          Serial.println("found a block before going backward");
           y_finish=y_pos;
           y_counter = 1;
           down_stuck = 1;
         }
         //go backward since no blocks
-        else{Serial.println("going backward");Backward(oneBlock); look_around();}
+        else{Backward(oneBlock); look_around();}
       }
     //update difference to see if you are where you want to be
-    Serial.print("y difference");Serial.println(y_difference);
-    y_difference = y_finish - y_pos;
+    y_difference = y_finish - y_pos;//check to see if you are at the finished y position
   }
   //if there was block which way were you going and hug object to get to position
+  //based on the x_pos you want to go the same way that you are currently going so you dont miss squares
   if(y_counter>0){
-    Serial.println("adjust y because of block");
-    if(x_pos==0 || x_pos==1 || x_pos==3){
-      if(y_pos<5){
+    //if moving in forward direction
+    if(x_pos==1 || x_pos==3){
+      if(y_pos<5){//not at last block
         Go_to(x_pos+1,y_pos+2); Go_to(x_pos-1,y_pos);
       }
-      else{Go_to(x_pos+1,y_pos+1);}
+      else{Go_to(x_pos+1,y_pos+1);}//at last block
     }
-    if(x_pos==2||x_pos==4||x_pos==5){
-      if(y_pos>2){
+    //if moving in the backward direction
+    else if(x_pos==2||x_pos==4){
+      if(y_pos>2){//not at last block
         Go_to(x_pos-1,y_pos-2); Go_to(x_pos+1,y_pos);
       }
-      else{Go_to(x_pos-1,y_pos-1);}
+      else{Go_to(x_pos+1,y_pos-1);}//at last block
+    }
+    else if(x_pos == 5){//at the last column
+      if(y_pos<4){
+        Go_to(x_pos-1,y_pos+2);Go_to(x_pos+1,y_pos);
+      }
+      else{
+        Home();//go home since obstacle is on last square. can also make a check unknown squares function here
+      }
     }
     y_counter = 0;
   }
@@ -797,6 +802,7 @@ void align_Delta(){
 }
 
 //Calibrate to block
+//will use the matrix that has obstacle locations to see a change in offset based on a reference point away that is no longer the wall
 void Calibrate(){
   if(x_pos<3)   {align_Bravo();   
     if(obstacle_map[x_pos-1][y_pos]==1){
@@ -805,26 +811,27 @@ void Calibrate(){
     else{offset_Bravo(x_pos);}
   }
    
-  else          {align_Delta();   
+  else if(x_pos ==3)  {align_Delta();   
+    if(obstacle_map[x_pos+1][y_pos]==1){offset_Delta(0);}
+  align_Delta();
+  }
 
-  
-  if(obstacle_map[x_pos+1][y_pos]==1){offset_Delta(0);}
-  else if(obstacle_map[x_pos+2][y_pos]==1){offset_Delta(1);}
-  else{offset_Delta(6-x_pos);}
+  else{align_Delta();
+    if(obstacle_map[x_pos+1][y_pos]==1){offset_Delta(0);}
+    else{offset_Delta(6-x_pos);}
   align_Delta();
   }
   
-  if(y_pos<4)   {
+  if(y_pos<3)   {
     if(obstacle_map[x_pos][y_pos-1]==1){offset_Charlie(0);}
-    else if(obstacle_map[x_pos][y_pos-2]==1){offset_Charlie(1);}
     else{offset_Charlie(y_pos);}
     align_Charlie();
     }
   
   
-  else          {
+  else if(y_pos>3)  {
    if(obstacle_map[x_pos][y_pos+1]==1){offset_Alpha(0);}
-   else{offset_Alpha(2);}
+   else{offset_Alpha(6-y_pos);}
    align_Alpha();
 }
 delay(200);
