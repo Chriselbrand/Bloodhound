@@ -102,9 +102,15 @@ int grabber_start    = 180;
 //pin for green start button
 #define Starter 39
 
-int obstacle_map[7][7];                 //map of obstacles
+int obstacle_map[7][7] ={{0000000},
+                         {0000000},
+                         {0000000},
+                         {0000000},
+                         {0000000},
+                         {0000000},
+                         {0000000}};
 
-int grid_map[7][7];                          //map of detected grid locations
+int grid_map[7][7] ;                          //map of detected grid locations
 
 //pins for Teensy
 #define ThomReady     3
@@ -176,6 +182,8 @@ pinMode(teensy_wire,    INPUT);
   
   //set green button for input
   pinMode(Starter,INPUT);
+
+
   
   //loop that goes until green button is pressed
   int starterread = digitalRead(Starter);
@@ -186,16 +194,6 @@ pinMode(teensy_wire,    INPUT);
     if (digitalRead(Starter) != starterread) starterread = 0;
     Serial.println(starterread);
   }
-
-  
-  /*
-  bool dontGO=true;
-  int GO=0;
-  while(dontGO){GO=digitalRead(Starter);
-    if(GO==1){dontGO=false;}
-    delay(200);
-  }
-  */
   
   //warm up strecth
   Start();    Locate();
@@ -232,11 +230,28 @@ pinMode(teensy_wire,    INPUT);
 
 //start program, Move to (1,1)
 void Start(){
-  Right(oneBlock/2);        align_Bravo();       
-  Forward(oneBlock);        align_Delta();    
-  Right(oneBlock/2);
-  x_pos = 1;   y_pos = 1;   Calibrate();
+  M1Motor->setSpeed(240); M3Motor->setSpeed(240);
+  Forward(oneBlock/2);
+  unsigned int DeltaR_time = DeltaR.ping_median(5);
+  if(DeltaR_time>200 && DeltaR_time<600){
+  Forward(oneBlock/2);    align_Bravo();
+  offset_Charlie(1)  ;    align_Bravo();
+  Forward(oneBlock)  ;    align_Bravo();
+  offset_Charlie(2)  ;    align_Bravo();
+  Right(oneBlock)    ;    align_Bravo();
+  offset_Bravo(1)    ;    align_Bravo();
+  x_pos = 1;    y_pos = 2;
+  Go_to(x_pos,y_pos); 
   }
+  else{
+  Forward(oneBlock/2);    align_Bravo();
+  offset_Charlie(1)  ;    align_Bravo();
+  Right(oneBlock)    ;    align_Bravo();
+  offset_Bravo(1)    ;    align_Bravo();
+  x_pos = 1;    y_pos = 1;
+  Go_to(x_pos,y_pos); 
+  }
+}
 
 //return to (0,0) from already known location
 void Home(){
@@ -250,40 +265,33 @@ void Home(){
 
 void look_around(){
   //check forward
-  unsigned int AlphaR_time = AlphaR.ping_median(5);    delay(200);
-  unsigned int AlphaL_time = AlphaL.ping_median(5);    delay(200);
+  unsigned int AlphaR_time = AlphaR.ping_median(5);   
+  unsigned int AlphaL_time = AlphaL.ping_median(5);    
            int A_time = (AlphaR_time + AlphaL_time)/2;
-  if(A_time>0 && A_time<800){
+  if(A_time>200 && A_time<600){
     //save obstacle spot to be used later
     obstacle_map[x_pos][y_pos+1] = 1;
   }
-  /*
-  //check left
-  unsigned int BravoR_time = BravoR.ping_median(5);    delay(200);
-  unsigned int BravoL_time = BravoL.ping_median(5);    delay(200);
-           int B_time = (BravoR_time + BravoL_time)/2;
-  if(B_time>0 && B_time<800){
-    //obstaclex[obnum] = x_pos--;
-    //obstacley[obnum] = y_pos;
-    //obnum++;
-  }
   //check backward
-  unsigned int CharlieR_time = CharlieR.ping_median(5);    delay(200);
+  unsigned int CharlieR_time = CharlieR.ping_median(5);    
   unsigned int CharlieL_time = CharlieL.ping_median(5);    delay(200);
            int C_time = (CharlieR_time + CharlieL_time)/2;
-  if(C_time>0 && C_time<800){
+  if(C_time>200 && C_time<00){
+    obstacle_map[x_pos][y_pos-1] = 1;
     //obstaclex[obnum] = x_pos;
     //obstacley[obnum] = y_pos--;
     //obnum++;
   }
-  */
+
+  
   //check right
   unsigned int DeltaR_time = DeltaR.ping_median(5);    delay(200);
   unsigned int DeltaL_time = DeltaL.ping_median(5);    delay(200);
            int D_time = (DeltaR_time + DeltaL_time)/2;
-  if(D_time>0 && D_time<800){
+  if(D_time>200 && D_time<600){
     obstacle_map[x_pos+1][y_pos] = 1;
   }
+ 
 }
 
 
@@ -292,6 +300,10 @@ void look_around(){
  *  will also possibly go to spot that is one block away from location needed then the next step will be to go to the desired location
  */
 void Go_to(int x_finish, int y_finish){
+  look_around();
+  Serial.print("i'm here"); Serial.print(x_pos);Serial.print(" , ");Serial.println(y_pos);
+  Serial.print("i'm going here"); Serial.print(x_finish);Serial.print(" , ");Serial.println(y_finish);
+  int left_stuck;    int right_stuck;   int up_stuck;   int down_stuck;
   //counts if there was object in x or y direction
   int x_counter = 0;
   int y_counter = 0;
@@ -302,89 +314,87 @@ void Go_to(int x_finish, int y_finish){
   while(x_difference != 0){
     //if need to go right
     if(x_difference>0)  {
-      //check if object is between xpos and desired pos
-      for(int i=x_finish;i>x_pos;i--){
-        if(obstacle_map[i][y_pos] = 1){
-          int x_finish = i-1;
+        if(obstacle_map[x_pos+1][y_pos] == 1 && x_counter == 0){
+        Serial.println("found a block before going right");
+          x_finish = x_pos;
           x_counter = 1;
         }
         //go right if no objects
-        else{Right(oneBlock);    look_around();}
-      }
+        else{Serial.println("going right");Right(oneBlock);    look_around();}
     }
     //if need to go left
     if(x_difference<0){
       //check if object is between xpos and desired pos
-      for(int i=x_finish;i<x_pos;i++){
-        if(obstacle_map[i][y_pos]=1){
-          int x_finish = i+1;
+      Serial.print(obstacle_map[x_pos-1][y_pos]);Serial.println("obstacle when going left");
+        if(obstacle_map[x_pos-1][y_pos]==1 && x_counter == 0){
+          Serial.println("found a block before going left");
+          int x_finish = x_pos;
           x_counter = 1;
         }
         //go left if no objects
-        else{Left(oneBlock);    look_around;}
-    }
+        else{Serial.println("going left");Left(oneBlock);    look_around;}
   }
   //update difference to see if you are where you want to be
   x_difference = x_finish - x_pos;
   }
   //if there was a block in x direction update y finish so that can move in y pos first then next goto will get you to location
   if(x_counter>0){
+    Serial.println("adjust x because of block");
     if(y_pos>3){
-      y_finish--;
-      y_difference = y_finish-y_pos;
+      Go_to(x_pos,y_pos-1);  Go_to(x_pos+1,y_pos);
+      y_difference = 0;
     }
     if(y_pos<4){
-      y_finish++;
-      y_difference = y_finish-y_pos;
+      Go_to(x_pos,y_pos+1); Go_to(x_pos+1,y_pos);
+      y_difference = 0;
     }
   }
-  //Backward(oneBlock);
+  x_counter = 0;
   //while y is not at desired location
 while(y_difference != 0){
   //if need to go forward
     if(y_difference>0)  {
         if(obstacle_map[x_pos][y_pos+1]==1){
-          int y_finish--;
+          Serial.println("found a block before going forward");
+          y_finish=y_pos;
           y_counter = 1;
-          Serial.print(", y_coutner: "); Serial.print(y_counter); Serial.print(", i again: "); Serial.println(i);
+          up_stuck = 1;
         }
         //go forward since no blocks
-        else{Forward(oneBlock); look_around();}
+        else{Serial.println("going forward");Forward(oneBlock); look_around();}
     }
     //if need to go backward
     if(y_difference<0){
       //look for objects in way
         if(obstacle_map[x_pos][y_pos-1]==1){
-          int y_finish++;
+          Serial.println("found a block before going backward");
+          y_finish=y_pos;
           y_counter = 1;
+          down_stuck = 1;
         }
         //go backward since no blocks
-        else{Backward(oneBlock); look_around();}
+        else{Serial.println("going backward");Backward(oneBlock); look_around();}
       }
     //update difference to see if you are where you want to be
+    Serial.print("y difference");Serial.println(y_difference);
     y_difference = y_finish - y_pos;
   }
   //if there was block which way were you going and hug object to get to position
-  Serial.println("ycount before change");
-  Serial.println(y_counter);
   if(y_counter>0){
-    Serial.println("im in here");
-    Serial.print("x_pos"); Serial.println(x_pos);
-    Serial.print("y_pos"); Serial.println(y_pos);
+    Serial.println("adjust y because of block");
     if(x_pos==0 || x_pos==1 || x_pos==3){
-      //Right(oneBlock);
       if(y_pos<5){
-        Go_to(x_pos+1,y_pos+2);
-        //Backward(oneBlock);
+        Go_to(x_pos+1,y_pos+2); Go_to(x_pos-1,y_pos);
       }
       else{Go_to(x_pos+1,y_pos+1);}
     }
     if(x_pos==2||x_pos==4||x_pos==5){
       if(y_pos>2){
-        Go_to(x_pos+1,y_pos-2);
+        Go_to(x_pos-1,y_pos-2); Go_to(x_pos+1,y_pos);
       }
-      else{Go_to(x_pos+1,y_pos-1);}
+      else{Go_to(x_pos-1,y_pos-1);}
     }
+    y_counter = 0;
   }
 }
 
@@ -407,7 +417,7 @@ void Right(int Blocks){
   }
   M2Motor->run(RELEASE);  M4Motor->run(RELEASE);  // turn off motors
   x_pos++;
-  delay(50);
+  delay(200);
 }
 
 //Move Left 12" so many Blocks times
@@ -429,7 +439,7 @@ void Left(int Blocks){
   }
   M2Motor->run(RELEASE);  M4Motor->run(RELEASE);  //turn off motors
   x_pos--;
-  delay(50);
+  delay(200);
 }
 
 //Move Backward 12" so many Blocks times
@@ -451,7 +461,7 @@ void Backward(int Blocks){
   }
   M1Motor->run(RELEASE);  M3Motor->run(RELEASE);  //turn off motors
   y_pos--;
-  delay(50);
+  delay(200);
 }
 
 //Move Forward 12" so many Blocks times
@@ -473,7 +483,7 @@ void Forward(int Blocks){
   }
   M1Motor->run(RELEASE);  M3Motor->run(RELEASE);  //turn off motors
   y_pos++;
-  delay(50);
+  delay(200);
 }
 
 //Rotate 90 degrees clockwise so many times
@@ -497,7 +507,7 @@ void turnCW(int Blocks){
   }
   M1Motor->run(RELEASE); M2Motor->run(RELEASE);
   M3Motor->run(RELEASE); M4Motor->run(RELEASE);  
-  delay(50);
+  delay(200);
 }
 
 //Rotate 90 degrees counter-clockwise so many times
@@ -521,7 +531,7 @@ void turnCCW(int Blocks){
   }
   M1Motor->run(RELEASE); M2Motor->run(RELEASE);
   M3Motor->run(RELEASE); M4Motor->run(RELEASE);
-  delay(50);
+  delay(200);
 }
 
 //adjust offset from wall based on ultrasonic readings
@@ -549,7 +559,7 @@ void offset_Alpha(int multiple){
     }  
   }
   M1Motor->run(RELEASE);  M3Motor->run(RELEASE);  //turn off motors
-  delay(50);
+  delay(200);
 }
 
 
@@ -578,7 +588,7 @@ void offset_Bravo(int multiple){
     }  
   }
   M2Motor->run(RELEASE);  M4Motor->run(RELEASE);  //turn off motors
-  delay(50);
+  delay(200);
 }
 
 
@@ -607,7 +617,7 @@ void offset_Charlie(int multiple){
     }  
   }
   M1Motor->run(RELEASE);  M3Motor->run(RELEASE);  //turn off motors
-  delay(50);
+  delay(200);
 }
 
 //adjust offset from wall based on ultrasonic readings
@@ -635,7 +645,7 @@ void offset_Delta(int multiple){
     }  
   }
   M2Motor->run(RELEASE);  M4Motor->run(RELEASE);  //turn off motors
-  delay(50);
+  delay(200);
 }
 
 //align when not parrallel with wall
@@ -672,7 +682,7 @@ void align_Alpha(){
   //turn off motors
   M1Motor->run(RELEASE); M2Motor->run(RELEASE);
   M3Motor->run(RELEASE); M4Motor->run(RELEASE);
-  delay(50);
+  delay(200);
 }
 
 //align when not parrallel with wall
@@ -709,7 +719,7 @@ void align_Bravo(){
   //turn off motors
   M1Motor->run(RELEASE); M2Motor->run(RELEASE);
   M3Motor->run(RELEASE); M4Motor->run(RELEASE);
-  delay(50);
+  delay(200);
 }
 
 //align when not parrallel with wall
@@ -746,7 +756,7 @@ void align_Charlie(){
   //turn off motors
   M1Motor->run(RELEASE); M2Motor->run(RELEASE);
   M3Motor->run(RELEASE); M4Motor->run(RELEASE);
-  delay(50);
+  delay(200);
 }
 
 //align when not parrallel with wall
@@ -783,16 +793,41 @@ void align_Delta(){
   //turn off motors
   M1Motor->run(RELEASE); M2Motor->run(RELEASE);
   M3Motor->run(RELEASE); M4Motor->run(RELEASE);
-  delay(50);
+  delay(200);
 }
 
 //Calibrate to block
 void Calibrate(){
-  if(x_pos<3)   {align_Bravo();   offset_Bravo(x_pos);     align_Bravo();}
-  else          {align_Delta();   offset_Delta(6-x_pos);   align_Delta();}
+  if(x_pos<3)   {align_Bravo();   
+    if(obstacle_map[x_pos-1][y_pos]==1){
+      offset_Bravo(0);    align_Bravo();
+    }
+    else{offset_Bravo(x_pos);}
+  }
+   
+  else          {align_Delta();   
+
   
-  if(y_pos<4)   {offset_Charlie(y_pos);                  align_Charlie();}
-  else          {offset_Alpha(6-y_pos);                    align_Alpha();}
+  if(obstacle_map[x_pos+1][y_pos]==1){offset_Delta(0);}
+  else if(obstacle_map[x_pos+2][y_pos]==1){offset_Delta(1);}
+  else{offset_Delta(6-x_pos);}
+  align_Delta();
+  }
+  
+  if(y_pos<4)   {
+    if(obstacle_map[x_pos][y_pos-1]==1){offset_Charlie(0);}
+    else if(obstacle_map[x_pos][y_pos-2]==1){offset_Charlie(1);}
+    else{offset_Charlie(y_pos);}
+    align_Charlie();
+    }
+  
+  
+  else          {
+   if(obstacle_map[x_pos][y_pos+1]==1){offset_Alpha(0);}
+   else{offset_Alpha(2);}
+   align_Alpha();
+}
+delay(200);
 }
 
 //set neo_pos based ont the x_pos and y_pos values to light up correct led
@@ -864,6 +899,7 @@ void Camera(){
     else       {align_Delta();    offset_Delta(6-x_pos);}
    }
    align_Alpha();
+   delay(200);
    offset_camera();//get to a close position on cache
 }
 
@@ -887,7 +923,7 @@ void offset_camera(){
     if(movement<0) {M1Motor->run(BACKWARD);  M3Motor->run(FORWARD );}  
   }
   M1Motor->run(RELEASE);  M3Motor->run(RELEASE);  //turn off motors
-  delay(50);
+  delay(200);
 }
 
 void Cory(){
