@@ -161,7 +161,7 @@ void setup() {
 
   //setup for motor interrupt pins
   pinMode(M1interrupt, INPUT_PULLUP); pinMode(M2interrupt, INPUT_PULLUP);
-  pinMode(M3interrupt, INPUT_PULLUP); pinMode(M4interrupt, INPUT_PULLUP);
+  pinMode(M3interrupt, INPUT); pinMode(M4interrupt, INPUT_PULLUP);
 
   //interrupt function attachment and call modes
   attachInterrupt(digitalPinToInterrupt(M1interrupt),M1count,RISING);
