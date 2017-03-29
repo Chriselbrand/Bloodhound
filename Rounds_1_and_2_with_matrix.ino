@@ -32,8 +32,8 @@ Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(8, 8, 6 /*pin*/,
 #define DOWN     51       //  green <-> green
 #define LEFT     49       // yellow <-> yellow
 #define RIGHT    47       // orange <-> orange
-#define TRANSMIT 43       //  brown <-> brown
-#define RECEIVE  45       //    red <-> red
+#define TRANSMIT 52       //  brown <-> brown
+#define RECEIVE  50       //    red <-> red
 
 //Ultrasonics library
 #include <NewPing.h>
@@ -142,6 +142,9 @@ int grid_map[7][7];                          //map of detected grid locations
 //SET THIS = 1 TO ENABLE SERIAL MONITOR TROUBLESHOOTING. 0 TO DISABLE.
 bool verboseSerial = 0;
 
+//setup for led
+int ledPin = 8;     
+
 //Line dancing moves
 void setup() {
   AFMS.begin();  // create with the default frequency 1.6KHz
@@ -187,6 +190,8 @@ void setup() {
   matrix.drawPixel(0,0,YELLOW_COLOR);
   matrix.show();
   
+  pinMode(ledPin, OUTPUT);   // sets the pin as output
+  
 //loop that goes until green button is pressed
   int starterread = digitalRead(Starter);
   while(starterread != 1){
@@ -201,6 +206,7 @@ void setup() {
   
   //warm up strecth
   Start();    //Locate();
+  
   blockStatus();
   if(verboseSerial == 1) Serial.println("Start pixel drawn");
 
@@ -1023,7 +1029,8 @@ void M4count(){M4tick++;}
 /****************************************************************************************CONTINUOUS LOOP**************************************************************************************/
 
 void loop() {
-
+//something in the loop for Thomas  
+analogWrite(ledPin, 240);  // analogRead values go from 0 to 1023, analogWrite values from 0 to 255
 }
 
 
