@@ -25,8 +25,8 @@ int neo_pos = 0;
 #define DOWN     51       //  green <-> green
 #define LEFT     49       // yellow <-> yellow
 #define RIGHT    47       // orange <-> orange
-#define TRANSMIT 43       //  brown <-> brown
-#define RECEIVE  45       //    red <-> red
+#define TRANSMIT 52       //  brown <-> brown
+#define RECEIVE  50       //    red <-> red
 
 //Ultrasonics library
 #include <NewPing.h>
@@ -695,24 +695,35 @@ void find_obstacles(){
 /*******************************************************COMM WITH CORY*****************************************************************/
 
 // function for placement of camera to cache lid
-void Camera(){
-  if(x_pos<2)           {turnCW(3*Ninety);       
+void Camera(int cache_x, int cache_y ){
+  
+  if(cache_x==0)      {Go_to(cache_x+1,cache_y);
+   
+                        turnCW(3*Ninety);       
                 align_Alpha();    offset_Alpha(x_pos)  ;
     if(y_pos<4){align_Bravo();    offset_Bravo(y_pos)  ;}
     else       {align_Delta();    offset_Delta(6-y_pos);}
   }
-  else if(x_pos>4)      {turnCW(Ninety);         
+  
+  else if(cache_x==6)   {Go_to(cache_x-1,cache_y);
+    
+                           turnCW(Ninety);         
                 align_Alpha();    offset_Alpha(6-x_pos);
     if(y_pos<4){align_Delta();    offset_Delta(y_pos)  ;}
     else       {align_Bravo();    offset_Bravo(6-y_pos);}
   }
-  else if(y_pos<4)      {turnCW(Ninety*2);
+  
+  else if(cache_y==0)   {Go_to(cache_x,cache_y+1);
+    
+                           turnCW(Ninety*2);
                 align_Alpha();    offset_Alpha(y_pos)  ;
     if(x_pos<4){align_Delta();    offset_Delta(x_pos)  ;}
     else       {align_Bravo();    offset_Bravo(6-x_pos);}
   }
-  else if(y_pos>4)      {//no need to turn
-                align_Alpha();    offset_Alpha(y_pos)  ;
+  else if(cache_y==6)      {Go_to(cache_x,cache_y-1);
+    
+                          //no need to turn
+                align_Alpha();    offset_Alpha(6-y_pos)  ;
     if(x_pos<4){align_Bravo();    offset_Bravo(x_pos)  ;}
     else       {align_Delta();    offset_Delta(6-x_pos);}
    }
