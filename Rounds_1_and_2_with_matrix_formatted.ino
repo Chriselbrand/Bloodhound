@@ -163,7 +163,7 @@ void setup()
 
     //initalize grabber pin and set to start position
     grabber.attach(grabber_pin);
-    grabber.write(120);
+    grabber.write(85);
 
     //Set speed that will be used
     M1Motor->setSpeed(M1Speed);
@@ -275,53 +275,65 @@ void setup()
     for (int x = 1; x <= 5; x++) {
         if (grid_map[x][1] == SOLID) {
             grid_map[x][0] = SOLID;
+            Serial.print(x);
+            Serial.println(" 0: SOLID");
         }
-        else if (map[x][1] == OBJECTIVE) {
+        if (grid_map[x][1] == OBJECTIVE) {
 
             int adjacentObj1 = 0;
 
-            if (map[x - 1][1] == OBJECTIVE) {
+            if (grid_map[x - 1][1] == OBJECTIVE) {
                 adjacentObj1++;
             }
-            if (map[x + 1][1] == OBJECTIVE) {
+            if (grid_map[x + 1][1] == OBJECTIVE) {
                 adjacentObj1++;
             }
-            if (map[x][2] == OBJECTIVE) {
+            if (grid_map[x][2] == OBJECTIVE) {
                 adjacentObj1++;
             }
 
             if (adjacentObj1 == 1) {
                 grid_map[x][0] = CACHE;
+                Serial.print(x);
+                Serial.println(" 0: CACHE");
                 matrix.drawPixel(x, 0, OBJECTIVE_COLOR);
             }
             else if (adjacentObj1 == 2) {
                 grid_map[x][0] = SOLID;
+                Serial.print(x);
+                Serial.println(" 0: SOLID BUT NEXT TO OT");
             }
 
             if (grid_map[x][5] == SOLID) {
                 grid_map[x][6] = SOLID;
+                Serial.print(x);
+                Serial.println(" 0: SOLID");
             }
         }
-        else if (map[x][5] == OBJECTIVE) {
+        if (grid_map[x][5] == OBJECTIVE) {
 
             int adjacentObj5 = 0;
 
-            if (map[x - 1][5] == OBJECTIVE) {
+            if (grid_map[x - 1][5] == OBJECTIVE) {
                 adjacentObj5++;
             }
-            if (map[x + 1][5] == OBJECTIVE) {
+            if (grid_map[x + 1][5] == OBJECTIVE) {
                 adjacentObj5++;
             }
-            if (map[x][4] == OBJECTIVE) {
+            if (grid_map[x][4] == OBJECTIVE) {
                 adjacentObj5++;
             }
 
             if (adjacentObj5 == 1) {
                 grid_map[x][6] = CACHE;
+                Serial.print(x);
+                Serial.println(" 6: CACHE");
                 matrix.drawPixel(x, 6, OBJECTIVE_COLOR);
             }
             else if (adjacentObj5 == 2) {
                 grid_map[x][6] = SOLID;
+                Serial.print(x);
+                Serial.println(" 6: SOLID BUT NEXT TO OT");
             }
         }
     }
@@ -329,49 +341,64 @@ void setup()
     for (int y = 1; y <= 5; y++) {
         if (grid_map[1][y] == SOLID) {
             grid_map[0][y] = SOLID;
+            Serial.print("0 ");
+            Serial.print(y);
+            Serial.println(": SOLID");
         }
-        else if (map[1][y] == OBJECTIVE) {
+        if (grid_map[1][y] == OBJECTIVE) {
 
             int adjacentObj1 = 0;
 
-            if (map[1][y - 1] == OBJECTIVE) {
+            if (grid_map[1][y - 1] == OBJECTIVE) {
                 adjacentObj1++;
             }
-            if (map[1][y + 1] == OBJECTIVE) {
+            if (grid_map[1][y + 1] == OBJECTIVE) {
                 adjacentObj1++;
             }
-            if (map[2][y] == OBJECTIVE) {
+            if (grid_map[2][y] == OBJECTIVE) {
                 adjacentObj1++;
             }
 
             if (adjacentObj1 == 1) {
                 grid_map[0][y] = CACHE;
+                Serial.print("0 ");
+                Serial.print(y);
+                Serial.println(": CACHE");
                 matrix.drawPixel(0, y, OBJECTIVE_COLOR);
             }
             else if (adjacentObj1 == 2) {
                 grid_map[0][y] = SOLID;
+                Serial.print("0 ");
+                Serial.print(y);
+                Serial.println(": SOLID BUT NEXT TO OT");
             }
         }
-        else if (map[5][y] == OBJECTIVE) {
+        if (grid_map[5][y] == OBJECTIVE) {
 
             int adjacentObj5 = 0;
 
-            if (map[5][y - 1] == OBJECTIVE) {
+            if (grid_map[5][y - 1] == OBJECTIVE) {
                 adjacentObj5++;
             }
-            if (map[5][y + 1] == OBJECTIVE) {
+            if (grid_map[5][y + 1] == OBJECTIVE) {
                 adjacentObj5++;
             }
-            if (map[4][y] == OBJECTIVE) {
+            if (grid_map[4][y] == OBJECTIVE) {
                 adjacentObj5++;
             }
 
             if (adjacentObj5 == 1) {
                 grid_map[6][y] = CACHE;
+                Serial.print("6 ");
+                Serial.print(y);
+                Serial.println(": CACHE");
                 matrix.drawPixel(6, y, OBJECTIVE_COLOR);
             }
             else if (adjacentObj5 == 2) {
                 grid_map[6][y] = SOLID;
+                Serial.print("6 ");
+                Serial.print(y);
+                Serial.println(": SOLID BUT NEXT TO OT");
             }
         }
     }
@@ -383,19 +410,20 @@ void setup()
     for (int y = 0; y < 7; y++) {
         for (int x = 0; x < 7; x++) {
             if (grid_map[x][y] == CACHE) {
-                if (x = 0) {
+                if (x == 0) {
                     Go_to(x + 1, y);
                     Camera(x, y);
+                    Cory();
                 }
-                if (x = 6) {
+                if (x == 6) {
                     Go_to(x - 1, y);
                     Camera(x, y);
                 }
-                if (y = 0) {
+                if (y == 0) {
                     Go_to(x, y + 1);
                     Camera(x, y);
                 }
-                if (y = 6) {
+                if (y == 6) {
                     Go_to(x, y - 1);
                     Camera(x, y);
                 }
@@ -414,7 +442,7 @@ void setup()
     //matrix.show();
 
     //Congratulations ET Everythings unlimited with the new TMobile ONE plan
-    Home();
+//    Home();
 }
 
 /**********************************************************************START OF FUNCTIONS(DANCE MOVES)****************************************************************************************/
@@ -1130,7 +1158,7 @@ void Camera(int cache_x, int cache_y)
 {
 
     if (cache_x == 0) {
-        Go_to(cache_x + 1, cache_y);
+        Go_to(cache_x + 1, cache_y);    Calibrate();
 
         turnCW(3 * Ninety);
         align_Alpha();
@@ -1146,7 +1174,7 @@ void Camera(int cache_x, int cache_y)
     }
 
     else if (cache_x == 6) {
-        Go_to(cache_x - 1, cache_y);
+        Go_to(cache_x - 1, cache_y);    Calibrate();
 
         turnCW(Ninety);
         align_Alpha();
@@ -1162,7 +1190,7 @@ void Camera(int cache_x, int cache_y)
     }
 
     else if (cache_y == 0) {
-        Go_to(cache_x, cache_y + 1);
+        Go_to(cache_x, cache_y + 1);    Calibrate();
 
         turnCW(Ninety * 2);
         align_Alpha();
@@ -1177,7 +1205,7 @@ void Camera(int cache_x, int cache_y)
         }
     }
     else if (cache_y == 6) {
-        Go_to(cache_x, cache_y - 1);
+        Go_to(cache_x, cache_y - 1);  Calibrate();
 
         //no need to turn
         align_Alpha();
@@ -1191,8 +1219,19 @@ void Camera(int cache_x, int cache_y)
             offset_Delta(6 - x_pos);
         }
     }
+    align_Alpha(); offset_Alpha(1);
     align_Alpha();
     offset_camera(); //get to a close position on cache
+    Cory();
+    align_Alpha();
+    offset_Alpha(1);
+    if(y_pos==1){turnCW(Ninety*2);}
+    else if(x_pos==5){turnCW(Ninety*3);}
+    else if(x_pos==1){turnCW(Ninety*1);}
+    Go_to(1,1);  Calibrate();
+    Left(oneBlock/2);  Backward(oneBlock);
+    align_Bravo(); Left(oneBlock/2);
+    Calibrate();
 }
 
 //moves close to lid
@@ -1285,14 +1324,13 @@ void Cory()
     grabber.write(180);
     delay(1000);
 
-    for (int down = 180; down >= 5; down -= 1) {
+    for (int down = 0; down <= 180; down += 1) {
         grabber.write(down);
         delay(10);
     }
-    grabber.write(0);
     delay(500);
 
-    for (int pos = 0; pos < 180; pos += 1) {
+    for (int pos = 180; pos >= 0; pos -= 1) {
         grabber.write(pos);
         delay(10);
     }
