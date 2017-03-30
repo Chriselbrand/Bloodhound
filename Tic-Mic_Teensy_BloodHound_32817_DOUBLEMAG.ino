@@ -291,6 +291,9 @@ void hollowOrSolid() {
       Serial.println(",");                 //
     digitalWrite(MEGA_READINGREADY, HIGH);
     readReadyTimer = 0;
+    if(digitalRead(KNOCKER_SOLENOID_PULSE_PIN) == 1){
+        digitalWrite(KNOCKER_SOLENOID_PULSE_PIN, LOW);
+    }
 /////////////////////////////////////////////////////////////////////////////////////////////
 }
 
