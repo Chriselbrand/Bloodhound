@@ -31,14 +31,14 @@ Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(8, 8, 6 /*pin*/,
 #define DOWN 51 //  green <-> green
 #define LEFT 49 // yellow <-> yellow
 #define RIGHT 47 // orange <-> orange
-#define TRANSMIT 43 //  brown <-> brown
-#define RECEIVE 45 //    red <-> red
+#define TRANSMIT 52 //  brown <-> brown
+#define RECEIVE 50 //    red <-> red
 
 //Ultrasonics library
 #include <NewPing.h>
 
 //Ultrasonic initialization
-#define MAX_DISTANCE 122 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
+#define MAX_DISTANCE 280 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
 
 //Beta side trigger and echo
 #define BravoR_TRIGGER 24
@@ -148,7 +148,7 @@ int grid_map[7][7]; //map of detected grid locations
 /**************************************************************************START OF PROGRAM***************************************************************************************************/
 
 //SET THIS = 1 TO ENABLE SERIAL MONITOR TROUBLESHOOTING. 0 TO DISABLE.
-bool verboseSerial = 0;
+bool verboseSerial = 1;
 
 //Line dancing moves
 void setup()
@@ -163,7 +163,7 @@ void setup()
 
     //initalize grabber pin and set to start position
     grabber.attach(grabber_pin);
-    grabber.write(85);
+    grabber.write(40);
 
     //Set speed that will be used
     M1Motor->setSpeed(M1Speed);
@@ -210,6 +210,7 @@ void setup()
     matrix.drawPixel(0, 0, YELLOW_COLOR);
     matrix.show();
 
+
     //loop that goes until green button is pressed
     int starterread = digitalRead(Starter);
     while (starterread != 1) {
@@ -220,7 +221,7 @@ void setup()
         delay(10);
         if (digitalRead(Starter) != starterread)
             starterread = 0;
-        Serial.println(starterread);
+//        Serial.println(starterread);
     }
     delay(300);
 
@@ -430,7 +431,7 @@ void setup()
             }
         }
     }
-
+    
     /******************************LED MATRIX OUTPUT**************************/
 
     //  for (int y_pos = 0 ; y_pos<7 ; y_pos++) {
@@ -1221,13 +1222,20 @@ void Camera(int cache_x, int cache_y)
     }
     align_Alpha(); offset_Alpha(1);
     align_Alpha();
+    delay(200);
     offset_camera(); //get to a close position on cache
+    delay(200);
     Cory();
+    Serial.println("Made it out of Cory()");
+    delay(200);
+    matrix.show();
+    Serial.println("Matrix re-displayed");
     align_Alpha();
     offset_Alpha(1);
-    if(y_pos==1){turnCW(Ninety*2);}
-    else if(x_pos==5){turnCW(Ninety*3);}
-    else if(x_pos==1){turnCW(Ninety*1);}
+    if(y_pos==1){turnCW(Ninety*2); Serial.println("Turned 180 degrees."); delay(200); Calibrate();}
+    else if(x_pos==5){turnCW(Ninety*3); Serial.println("Turned 270 degrees."); delay(200); Calibrate();}
+    else if(x_pos==1){turnCW(Ninety*1); Serial.println("Turned 90 degrees."); delay(200); Calibrate();}
+    Serial.print("this is my x,y"); Serial.print(x_pos); Serial.println(y_pos);
     Go_to(1,1);  Calibrate();
     Left(oneBlock/2);  Backward(oneBlock);
     align_Bravo(); Left(oneBlock/2);
@@ -1239,9 +1247,11 @@ void offset_camera()
 {
     M1Motor->setSpeed(M1Speed);
     M3Motor->setSpeed(M3Speed);
-    int goal = 980; //goal distance based on multiple parameter from blocks between wall
+    int goal = 1200; //goal distance based on multiple parameter from blocks between wall
     unsigned int AlphaR_time = AlphaR.ping_median(5); // Send ping, get ping time in microseconds (uS).
     unsigned int AlphaL_time = AlphaL.ping_median(5); // Send ping, get ping time in microseconds (uS).
+    Serial.println(AlphaR_time);
+    Serial.println(AlphaL_time);
     //difference from goal and absolute value for error correction
     int differenceL = AlphaL_time - goal;
     int differenceR = AlphaR_time - goal;
@@ -1249,6 +1259,7 @@ void offset_camera()
     differenceR = abs(differenceR);
     //loop for error correction
     while (differenceR > 50 && differenceL > 50) {
+      Serial.println("in loop");
         AlphaL_time = AlphaL.ping();
         AlphaR_time = AlphaR.ping();
         differenceL = AlphaL_time - goal;
@@ -1266,20 +1277,22 @@ void offset_camera()
             M3Motor->run(FORWARD);
         }
     }
-    M1Motor->run(RELEASE);
-    M3Motor->run(RELEASE); //turn off motors
-    delay(50);
+        M1Motor->run(RELEASE);
+        M3Motor->run(RELEASE);
+        delay(200);
 }
 
 void Cory()
 {
-    bool Cory = true;
+    bool cory = true;
 
     digitalWrite(TRANSMIT, HIGH);
     delay(100);
     digitalWrite(TRANSMIT, LOW);
 
-    while (Cory) {
+ 
+
+    while (cory) {
         int move_up = digitalRead(UP);
         int move_down = digitalRead(DOWN);
         int move_left = digitalRead(LEFT);
@@ -1314,14 +1327,12 @@ void Cory()
             M2Motor->run(RELEASE);
             M4Motor->run(RELEASE);
         } //left
-        int reading = digitalRead(RECEIVE);
-        if (reading == 1) {
-            Cory = false;
+        if (digitalRead(RECEIVE)) {
+            cory = false;
         } // get out of loop when cory is finished
     }
     //delay(3000);
     //grab lid and place on porch with security guard
-    grabber.write(180);
     delay(1000);
 
     for (int down = 0; down <= 180; down += 1) {
@@ -1335,22 +1346,22 @@ void Cory()
         delay(10);
     }
     delay(1000);
+    delay(4000);
+    delay(4000);
 
     //This tells Cory that servo is moved
-    digitalWrite(TRANSMIT, HIGH);
-    delay(100);
-    digitalWrite(TRANSMIT, LOW);
-
+    //digitalWrite(TRANSMIT, HIGH);
+    //delay(100);
+    //Serial.println("Waiting for Cory's slow ass...");
+    
     //This loop will wait until Pi is done with die
-    Cory = true;
-    while (Cory) {
-        int reading = digitalRead(RECEIVE);
-        if (reading == 1) {
-            Cory = false;
-        }
-        delay(200);
-    }
+    //while (!digitalRead(RECEIVE)) {
+      //Serial.println("inloop")
+      //delay(10);
+    //}
+    //Serial.println("FINALLY!");
 }
+
 
 /**************************************************************************************INTERRUPT FUNCTIONS************************************************************************************/
 //functions that will count the rising edge of interrupts for each motor
