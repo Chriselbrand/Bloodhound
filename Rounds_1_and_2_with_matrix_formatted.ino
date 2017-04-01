@@ -746,6 +746,9 @@ void offset_Alpha(int multiple)
     differenceR = abs(differenceR);
     //loop for error correction
     int gone = 0;
+    int old_movement;
+    int positive = 0;
+    int negative = 0;
     while (differenceR > 50 && differenceL > 50) {
         AlphaL_time = AlphaL.ping();
         AlphaR_time = AlphaR.ping();
@@ -755,17 +758,28 @@ void offset_Alpha(int multiple)
         differenceL = abs(differenceL);
         differenceR = abs(differenceR);
         //motion adjustment based on positive or negative movement to or from wall
+        if(movement > old_movement && positive == 1){
+           offset_Alpha(multiple);
+           break;
+        }
+        if(old_movement>movement && negative == 1){
+          offset_Alpha(multiple);
+          break;
+        }
         if (movement > 0 && gone == 0) {
+          old_movement = movement;
+            positive=1;
             gone = 1;
-            M1Motor->run(FORWARD);
-            M3Motor->run(BACKWARD);
+              M1Motor->run(FORWARD);
+              M3Motor->run(BACKWARD);
+          }
+          if (movement < 0 && gone == 0) {
+              negative = 1;
+              gone = 1;
+              M1Motor->run(BACKWARD);
+              M3Motor->run(FORWARD);
+          }
         }
-        if (movement < 0 && gone == 0) {
-            gone = 1;
-            M1Motor->run(BACKWARD);
-            M3Motor->run(FORWARD);
-        }
-    }
     M1Motor->run(RELEASE);
     M3Motor->run(RELEASE); //turn off motors
     delay(50);
@@ -786,6 +800,9 @@ void offset_Bravo(int multiple)
     differenceR = abs(differenceR);
     //loop for error correction
     int gone = 0;
+    int old_movement;
+    int positive = 0;
+    int negative = 0;
     while (differenceR > 50 && differenceL > 50) {
         BravoL_time = BravoL.ping();
         BravoR_time = BravoR.ping();
@@ -795,12 +812,24 @@ void offset_Bravo(int multiple)
         differenceL = abs(differenceL);
         differenceR = abs(differenceR);
         //motion adjustment based on positive or negative movement to or from wall
+        if (movement > old_movement && positive == 1) {
+          offset_Bravo(multiple);
+          break;
+        }
+        if (old_movement>movement && negative == 1){
+          offset_Bravo(multiple);
+          break;
+        }
         if (movement > 0 && gone == 0) {
+            old_movement = movement;
+            positive = 1;
             gone = 1;
             M2Motor->run(BACKWARD);
             M4Motor->run(FORWARD);
         }
         if (movement < 0 && gone == 0) {
+            old_movement = movement;
+            negative = 1;
             gone = 1;
             M2Motor->run(FORWARD);
             M4Motor->run(BACKWARD);
@@ -826,6 +855,9 @@ void offset_Charlie(int multiple)
     differenceR = abs(differenceR);
     //loop for error correction
     int gone = 0;
+    int old_movement;
+    int positive = 0;
+    int negative = 0;
     while (differenceR > 50 && differenceL > 50) {
         CharlieL_time = CharlieL.ping();
         CharlieR_time = CharlieR.ping();
@@ -835,12 +867,24 @@ void offset_Charlie(int multiple)
         differenceL = abs(differenceL);
         differenceR = abs(differenceR);
         //motion adjustment based on positive or negative movement to or from wall
+        if (movement > old_movement && positive == 1) {
+          offset_Charlie(multiple);
+          break;
+        }
+        if (old_movement > movement && negative == 1){
+          offset_Charlie(multiple);
+          break;
+        }
         if (movement > 0 && gone == 0) {
+            old_movement = movement;
+            positive = 1;
             gone = 1;
             M1Motor->run(BACKWARD);
             M3Motor->run(FORWARD);
         }
         if (movement < 0 && gone == 0) {
+            old_movement = movement;
+            negative = 1;
             gone = 1;
             M1Motor->run(FORWARD);
             M3Motor->run(BACKWARD);
@@ -866,6 +910,9 @@ void offset_Delta(int multiple)
     differenceR = abs(differenceR);
     //loop for error correction
     int gone = 0;
+    int old_movement;
+    int positive = 0;
+    int negative = 0;
     while (differenceR > 50 && differenceL > 50) {
         DeltaL_time = DeltaL.ping();
         DeltaR_time = DeltaR.ping();
@@ -875,12 +922,24 @@ void offset_Delta(int multiple)
         differenceL = abs(differenceL);
         differenceR = abs(differenceR);
         //motion adjustment based on positive or negative movement to or from wall
+        if (movement > old_movement && positive == 1){
+          offset_Delta(multiple);
+          break;
+        }
+        if (old_movement > movement && negative == 1){
+          offset_Delta(multiple);
+          break;
+        }
         if (movement > 0 && gone == 0) {
+            old_movement = movement;
+            positive = 1;
             gone = 1;
             M2Motor->run(FORWARD);
             M4Motor->run(BACKWARD);
         }
         if (movement < 0 && gone == 0) {
+            old_movement = movement;
+            negative = 1;
             gone = 1;
             M2Motor->run(BACKWARD);
             M4Motor->run(FORWARD);
