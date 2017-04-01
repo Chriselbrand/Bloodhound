@@ -231,7 +231,59 @@ pinMode(teensy_wire,    INPUT);
 }
   
 /**********************************************************************START OF FUNCTIONS(DANCE MOVES)****************************************************************************************/
+void blockStatus()
+{
 
+    delay(200);
+
+    digitalWrite(ThomCall, HIGH);
+    while (!digitalRead(ThomReady)) {
+        delay(1);
+    }
+    while (digitalRead(ThomReady)) {
+        delay(1);
+    }
+    while (!digitalRead(ThomReady)) {
+        delay(1);
+    }
+
+    //  while(!digitalRead(ThomReady)){
+    //    delay(200);
+    //  }
+    digitalWrite(ThomCall, LOW);
+    delay(50);
+    bool hollow = digitalRead(teensy_hollow);
+    int wire = digitalRead(teensy_wire);
+    Serial.println(wire);
+    if (wire == 1) {
+        grid_map[x_pos][y_pos] = OBJECTIVE;
+        matrix.drawPixel(x_pos, y_pos, OBJECTIVE_COLOR);
+        Serial.print("(");
+        Serial.print(x_pos);
+        Serial.print(",");
+        Serial.print(y_pos);
+        Serial.println("): OBJECTIVE");
+    }
+    else if (hollow == true) {
+        grid_map[x_pos][y_pos] = DEAD_END;
+        matrix.drawPixel(x_pos, y_pos, DEAD_END_COLOR);
+        Serial.print("(");
+        Serial.print(x_pos);
+        Serial.print(",");
+        Serial.print(y_pos);
+        Serial.println("): DEAD END");
+    }
+    else {
+        grid_map[x_pos][y_pos] = SOLID;
+        Serial.print("(");
+        Serial.print(x_pos);
+        Serial.print(",");
+        Serial.print(y_pos);
+        Serial.println("): SOLID");
+    }
+
+    matrix.show();
+}
 //start program, Move to (1,1)
 void Start(){
   M1Motor->setSpeed(240); M3Motor->setSpeed(240);
